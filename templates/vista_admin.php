@@ -1,4 +1,3 @@
-
 <div class="row">
     <div class="col-12 d-flex justify-content-center">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -20,8 +19,10 @@
                                 Usuarios
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="usuariosDropdown">
-                                <li><a class="dropdown-item" href="crear_usuarios.php">Crear Usuario</a></li>
-                                <li><a class="dropdown-item" href="lista_usuarios.php">Lista de Usuarios</a></li>
+                                <?php if ($_SESSION['rol'] === 'administrador'): ?>
+                                    <li><a class="dropdown-item" href="crear_usuarios.php">Crear Usuario</a></li>
+                                    <li><a class="dropdown-item" href="lista_usuarios.php">Lista de Usuarios</a></li>
+                                <?php endif; ?>
                                 <li><a class="dropdown-item" href="crear_clientes.php">Crear Cliente</a></li>
                                 <li><a class="dropdown-item" href="lista_clientes.php">Lista de Clientes</a></li>
                             </ul>

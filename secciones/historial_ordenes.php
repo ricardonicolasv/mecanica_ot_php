@@ -1,7 +1,10 @@
 <?php
+include('../configuraciones/bd.php');
+session_start();
 include('../templates/header_admin.php');
 include('../templates/vista_admin.php');
-include('../configuraciones/bd.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
 $conexionBD = BD::crearInstancia();
 
@@ -70,53 +73,58 @@ foreach ($historial as $registro) {
 
     // Generar descripción según el campo modificado (ajusta según tus casos)
     switch ($registro['campo_modificado']) {
+        case 'Creación':
+            $desc = "<strong>Se ha creado una nueva Orden de Trabajo.</strong>";
+            break;
         case 'Cliente':
-            $desc = "Cliente de " 
+            $desc = "<strong>Cliente</strong> de <em>"
                 . ($registro['nombre_cliente_anterior'] ?? $registro['valor_anterior'])
-                . " a " 
-                . ($registro['nombre_cliente_nuevo'] ?? $registro['valor_nuevo']);
+                . "</em> a <em>"
+                . ($registro['nombre_cliente_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
             break;
         case 'Responsable':
-            $desc = "Responsable de " 
+            $desc = "<strong>Responsable</strong> de <em>"
                 . ($registro['nombre_responsable_anterior'] ?? $registro['valor_anterior'])
-                . " a " 
-                . ($registro['nombre_responsable_nuevo'] ?? $registro['valor_nuevo']);
+                . "</em> a <em>"
+                . ($registro['nombre_responsable_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
             break;
         case 'Estado':
-            $desc = "Estado de " 
+            $desc = "<strong>Estado</strong> de <em>"
                 . ($registro['nombre_estado_anterior'] ?? $registro['valor_anterior'])
-                . " a " 
-                . ($registro['nombre_estado_nuevo'] ?? $registro['valor_nuevo']);
+                . "</em> a <em>"
+                . ($registro['nombre_estado_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
             break;
         case 'Tipo de Trabajo':
             $decodedAnterior = json_decode($registro['valor_anterior'], true);
             $decodedNuevo = json_decode($registro['valor_nuevo'], true);
             $textoAnterior = is_array($decodedAnterior) ? implode(', ', $decodedAnterior) : ($serviciosMap[$registro['valor_anterior']] ?? $registro['valor_anterior']);
             $textoNuevo = is_array($decodedNuevo) ? implode(', ', $decodedNuevo) : ($serviciosMap[$registro['valor_nuevo']] ?? $registro['valor_nuevo']);
-            $desc = "Tipo de trabajo de " . $textoAnterior . " a " . $textoNuevo;
+            $desc = "<strong>Tipo de trabajo</strong> de <em>" . $textoAnterior . "</em> a <em>" . $textoNuevo . "</em>";
             break;
         case 'Producto Nuevo':
-            $desc = "Producto nuevo: " . $registro['valor_nuevo'];
+            $desc = "<strong>Producto nuevo:</strong> <em>" . $registro['valor_nuevo'] . "</em>";
             break;
         case 'Producto Reemplazado':
-            $desc = "Producto reemplazado: de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];
+            $desc = "<strong>Producto reemplazado</strong>: de <em>" . $registro['valor_anterior'] . "</em> a <em>" . $registro['valor_nuevo'] . "</em>";
             break;
         case 'Producto Eliminado':
-            $desc = "Producto eliminado: " . $registro['valor_anterior'];
+            $desc = "<strong>Producto eliminado:</strong> <em>" . $registro['valor_anterior'] . "</em>";
             break;
         case 'Cantidad Producto':
-            $desc = "Cantidad de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];
+            $desc = "<strong>Cantidad</strong> de <em>" . $registro['valor_anterior'] . "</em> a <em>" . $registro['valor_nuevo'] . "</em>";
             break;
         case 'Costo Total':
-            $desc = "Costo Total de $" . number_format($registro['valor_anterior'], 0, ',', '.')
-                . " a $" . number_format($registro['valor_nuevo'], 0, ',', '.');
+            $desc = "<strong>Costo Total</strong> de <em>$" . number_format($registro['valor_anterior'], 0, ',', '.') . "</em> a <em>$" . number_format($registro['valor_nuevo'], 0, ',', '.') . "</em>";
             break;
         case 'Descripción':
-            $desc = "Descripción de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];
+            $desc = "<strong>Descripción</strong> de <em>" . $registro['valor_anterior'] . "</em> a <em>" . $registro['valor_nuevo'] . "</em>";
             break;
         default:
-            $desc = $registro['campo_modificado'] . " de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];
+            $desc = "<strong>" . htmlspecialchars($registro['campo_modificado']) . "</strong> de <em>"
+                . htmlspecialchars($registro['valor_anterior']) . "</em> a <em>"
+                . htmlspecialchars($registro['valor_nuevo']) . "</em>";
     }
+
     $grouped[$key]['descripciones'][] = $desc;
 }
 
@@ -240,7 +248,7 @@ $groupedPaginated = array_slice($grouped, $offset, $limit);
                     <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>">
                         <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>"><?php echo $i; ?></a>
                     </li>
-                <?php
+                    <?php
                 endfor;
             } else {
                 // Si estamos en las primeras 5 páginas
@@ -302,7 +310,7 @@ $groupedPaginated = array_slice($grouped, $offset, $limit);
                         <li class="page-item <?php echo ($page == $i) ? 'active' : ''; ?>">
                             <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>"><?php echo $i; ?></a>
                         </li>
-                    <?php
+            <?php
                     endfor;
                 }
             }

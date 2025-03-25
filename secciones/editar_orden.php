@@ -1,7 +1,10 @@
 <?php
-require_once('../configuraciones/bd.php');
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
+session_start();
+include('../configuraciones/bd.php');
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['supervisor', 'administrador', 'tecnico']);
 
 $conexionBD = BD::crearInstancia();
 
@@ -235,7 +238,9 @@ $costo_total_calculado = $total_productos + $total_servicios;
                                     <td>
                                         <input type="number" class="form-control" name="cantidad[]" value="<?= htmlspecialchars($producto['cantidad']) ?>" min="1" onchange="actualizarCostoTotal()">
                                     </td>
-                                    <td><button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button></td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -244,7 +249,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
 
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-success">Actualizar OT</button>
-                        <a href="lista_ordenes.php" class="btn btn-secondary">Cancelar</a>
+                        <a href="lista_ordenes.php" class="btn btn-warning">Cancelar</a>
                     </div>
                 </form>
             </div>

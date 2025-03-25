@@ -1,8 +1,11 @@
 <?php 
 require_once('../configuraciones/bd.php');
 include('../secciones/usuarios.php'); 
-include('../templates/header_admin.php');
+session_start();
+include('../templates/header_admin.php'); 
 include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['administrador']);
 ?>
     <main>
         <div class="container">
@@ -62,7 +65,6 @@ include('../templates/vista_admin.php');
                                 <option value="administrador" <?= ($rol=="administrador") ? "selected" : "" ?>>Administrador</option>
                                 <option value="supervisor" <?= ($rol=="supervisor") ? "selected" : "" ?>>Supervisor</option>
                                 <option value="tecnico" <?= ($rol=="tecnico") ? "selected" : "" ?>>Técnico</option>
-                                <option value="usuario" <?= ($rol=="usuario") ? "selected" : "" ?>>Usuario</option>
                             </select>
                         </div>
                         <!-- Botones -->

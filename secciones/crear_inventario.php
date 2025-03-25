@@ -1,5 +1,10 @@
-<?php include('../templates/header_admin.php'); ?>
-<?php include('../templates/vista_admin.php'); ?>
+<?php 
+session_start();
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']); 
+?>
 <main>
     <div class="container">
         <div class="row justify-content-center">
@@ -41,7 +46,7 @@
 
                     <div class="text-center">
                         <button type="submit" class="btn btn-success">Guardar</button>
-                        <a href="lista_inventario.php" class="btn btn-secondary">Cancelar</a>
+                        <a href="lista_inventario.php" class="btn btn-warning">Cancelar</a>
                     </div>
                 </form>
             </div>

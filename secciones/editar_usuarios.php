@@ -1,11 +1,66 @@
 <?php
-include('../configuraciones/bd.php');
+session_start();
+require('../configuraciones/bd.php');
+require('../configuraciones/verificar_acceso.php');
+verificarAcceso(['administrador']);
+
 $conexionBD = BD::crearInstancia();
 
-$id_usuario = isset($_GET['id_usuario']) ? $_GET['id_usuario'] : '';
-
+$id_usuario = $_GET['id_usuario'] ?? '';
 $nombre = $apellido = $email = $password = $rol = '';
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['editar'])) {
+        $id_usuario = $_POST['id_usuario'];
+        $nombre = $_POST['nombre'];
+        $apellido = $_POST['apellido'];
+        $email = $_POST['email'];
+        $passwordForm = $_POST['password'];
+        $rol = $_POST['rol'];
+
+        // Si se quiere actualizar la contraseña
+        if (!empty($passwordForm)) {
+            $passwordHashed = password_hash($passwordForm, PASSWORD_DEFAULT);
+            $sql = "UPDATE usuarios 
+                    SET nombre=:nombre, apellido=:apellido, email=:email, password=:password, rol=:rol 
+                    WHERE id_usuario=:id_usuario";
+            $consulta = $conexionBD->prepare($sql);
+            $consulta->bindParam(':password', $passwordHashed, PDO::PARAM_STR);
+        } else {
+            // Si no se quiere cambiar la contraseña
+            $sql = "UPDATE usuarios 
+                    SET nombre=:nombre, apellido=:apellido, email=:email, rol=:rol 
+                    WHERE id_usuario=:id_usuario";
+            $consulta = $conexionBD->prepare($sql);
+        }
+
+        // Parámetros comunes
+        $consulta->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
+        $consulta->bindParam(':nombre', $nombre, PDO::PARAM_STR);
+        $consulta->bindParam(':apellido', $apellido, PDO::PARAM_STR);
+        $consulta->bindParam(':email', $email, PDO::PARAM_STR);
+        $consulta->bindParam(':rol', $rol, PDO::PARAM_STR);
+
+        $consulta->execute();
+
+        header("Location: lista_usuarios.php");
+        exit();
+    }
+
+
+    if (isset($_POST['borrar'])) {
+        $id_usuario = $_POST['id_usuario'];
+        $sql = "DELETE FROM usuarios WHERE id_usuario = :id_usuario";
+        $consulta = $conexionBD->prepare($sql);
+        $consulta->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
+        $consulta->execute();
+
+        header("Location: lista_usuarios.php");
+        exit();
+    }
+}
+
+// Cargar datos si hay ID
 if ($id_usuario) {
     $sql = "SELECT * FROM usuarios WHERE id_usuario = :id_usuario";
     $consulta = $conexionBD->prepare($sql);
@@ -22,42 +77,11 @@ if ($id_usuario) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar'])) {
-    $id_usuario = $_POST['id_usuario'];
-    $nombre = $_POST['nombre'];
-    $apellido = $_POST['apellido'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $rol = $_POST['rol'];
-
-    $sql = "UPDATE usuarios SET nombre=:nombre, apellido=:apellido, email=:email, password=:password, rol=:rol WHERE id_usuario=:id_usuario";
-    $consulta = $conexionBD->prepare($sql);
-    $consulta->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
-    $consulta->bindParam(':nombre', $nombre, PDO::PARAM_STR);
-    $consulta->bindParam(':apellido', $apellido, PDO::PARAM_STR);
-    $consulta->bindParam(':email', $email, PDO::PARAM_STR);
-    $consulta->bindParam(':password', $password, PDO::PARAM_STR);
-    $consulta->bindParam(':rol', $rol, PDO::PARAM_STR);
-    $consulta->execute();
-
-    header("Location: lista_usuarios.php");
-    exit();
-}
-// Eliminar usuario si se presiona el botón "Borrar Usuario"
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['borrar'])) {
-    $id_usuario = $_POST['id_usuario'];
-    $sql = "DELETE FROM usuarios WHERE id_usuario = :id_usuario";
-    $consulta = $conexionBD->prepare($sql); // Aquí corregimos la variable usada
-    $consulta->bindParam(':id_usuario', $id_usuario, PDO::PARAM_INT);
-    $consulta->execute();
-    header("Location: lista_usuarios.php");
-    exit();
-}
-?>
-<?php
+// SOLO AHORA cargamos las vistas:
 include('../templates/header_admin.php');
 include('../templates/vista_admin.php');
 ?>
+
 <main>
     <div class="container">
         <div class="row justify-content-center">
@@ -79,9 +103,10 @@ include('../templates/vista_admin.php');
                         <input type="email" class="form-control" id="email" name="email" value="<?php echo $email; ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" value="<?php echo $password; ?>" required>
+                        <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+                        <input type="password" class="form-control" id="password" name="password">
                     </div>
+
                     <div class="mb-3">
                         <label for="rol" class="form-label">Rol</label>
                         <select class="form-select" id="rol" name="rol" required>

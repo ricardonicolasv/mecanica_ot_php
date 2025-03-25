@@ -18,6 +18,7 @@ if ($accion != '') {
 
         switch ($accion) {
             case 'agregar':
+                $descripcion_actividad = $_POST['descripcion_actividad'] ?? '';
                 try {
                     // Verificar si ya hay una transacción activa antes de comenzar una nueva
                     if (!$conexionBD->inTransaction()) {
@@ -35,6 +36,16 @@ if ($accion != '') {
                     $consulta_ot->execute();
                     $id_ot = $conexionBD->lastInsertId();
 
+                    // Registrar en historial que se creó una nueva OT
+                    $id_responsable = $_SESSION['id_usuario'] ?? $id_responsable ?? null; // respaldo por seguridad
+                    $sql_historial = "INSERT INTO historial_ot (id_ot, id_responsable, campo_modificado, valor_anterior, valor_nuevo, fecha_modificacion) 
+                  VALUES (:id_ot, :id_responsable, 'Creación', 'N/A', 'Nueva OT creada', NOW())";
+                    $stmt_historial = $conexionBD->prepare($sql_historial);
+                    $stmt_historial->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $stmt_historial->bindParam(':id_responsable', $id_responsable, PDO::PARAM_INT);
+                    $stmt_historial->execute();
+
+
                     // Insertar el servicio en la tabla Servicios_OT
                     if (!empty($_POST['id_servicio'])) {
                         $id_servicio = $_POST['id_servicio'];
@@ -44,13 +55,18 @@ if ($accion != '') {
                         $consulta_servicio->bindParam(':id_servicio', $id_servicio, PDO::PARAM_INT);
                         $consulta_servicio->execute();
                     }
-
+                    // Insertar descripción como fila separada en Detalle_OT (sin producto)
+                    $sql_detalle = "INSERT INTO Detalle_OT (id_ot, descripcion_actividad) VALUES (:id_ot, :descripcion_actividad)";
+                    $consulta_detalle = $conexionBD->prepare($sql_detalle);
+                    $consulta_detalle->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $consulta_detalle->bindParam(':descripcion_actividad', $descripcion_actividad, PDO::PARAM_STR);
+                    $consulta_detalle->execute();
                     // Insertar descripción de la OT si no hay productos
                     if (empty($_POST['productos'])) {
                         $sql_detalle = "INSERT INTO Detalle_OT (id_ot, descripcion_actividad) VALUES (:id_ot, :descripcion_actividad)";
                         $consulta_detalle = $conexionBD->prepare($sql_detalle);
-                        $consulta_detalle->bindParam(':id_ot', $id_ot);
-                        $consulta_detalle->bindParam(':descripcion_actividad', $descripcion_actividad);
+                        $consulta_detalle->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                        $consulta_detalle->bindParam(':descripcion_actividad', $descripcion_actividad, PDO::PARAM_STR);
                         $consulta_detalle->execute();
                     }
 
@@ -60,14 +76,14 @@ if ($accion != '') {
                             $cantidad_solicitada = $_POST['cantidades'][$key];
 
                             // Registrar productos en Detalle_OT
-                            $sql_producto = "INSERT INTO Detalle_OT (id_ot, id_producto, descripcion_actividad, cantidad) 
-                                             VALUES (:id_ot, :id_producto, :descripcion_actividad, :cantidad)";
+                            $sql_producto = "INSERT INTO Detalle_OT (id_ot, id_producto, cantidad) 
+                 VALUES (:id_ot, :id_producto, :cantidad)";
                             $consulta_producto = $conexionBD->prepare($sql_producto);
                             $consulta_producto->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
                             $consulta_producto->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-                            $consulta_producto->bindParam(':descripcion_actividad', $descripcion_actividad);
                             $consulta_producto->bindParam(':cantidad', $cantidad_solicitada, PDO::PARAM_INT);
                             $consulta_producto->execute();
+
 
                             // Descontar del inventario
                             $sql_actualizar_inventario = "UPDATE Inventario SET cantidad = cantidad - :cantidad_solicitada 
@@ -307,21 +323,21 @@ if ($accion != '') {
 
                             if (isset($productos_por_detalle[$id_detalle_post])) {
                                 $producto_anterior = $productos_por_detalle[$id_detalle_post];
-                            
+
                                 // Obtener nombres de productos antes y después de la modificación
                                 $sql_get_producto = "SELECT marca FROM Productos WHERE id_producto = :id_producto";
                                 $stmt = $conexionBD->prepare($sql_get_producto);
-                            
+
                                 // Producto nuevo
                                 $stmt->bindParam(':id_producto', $id_producto_post, PDO::PARAM_INT);
                                 $stmt->execute();
                                 $nombre_producto_nuevo = $stmt->fetchColumn();
-                            
+
                                 // Producto anterior
                                 $stmt->bindParam(':id_producto', $producto_anterior['id_producto'], PDO::PARAM_INT);
                                 $stmt->execute();
                                 $nombre_producto_old = $stmt->fetchColumn();
-                            
+
                                 // Si el producto fue reemplazado por otro diferente
                                 if ($producto_anterior['id_producto'] != $id_producto_post) {
                                     $campos_modificados[] = [
@@ -330,7 +346,7 @@ if ($accion != '') {
                                         'nuevo' => "Producto: " . $nombre_producto_nuevo . ", Cantidad: " . $cantidad_post
                                     ];
                                 }
-                            
+
                                 // Si solo cambió la cantidad del producto
                                 if ($producto_anterior['cantidad'] != $cantidad_post) {
                                     $campos_modificados[] = [
@@ -340,7 +356,6 @@ if ($accion != '') {
                                     ];
                                 }
                             }
-                            
                         } else {
                             $sql_get_producto = "SELECT marca FROM Productos WHERE id_producto = :id_producto";
                             $stmt = $conexionBD->prepare($sql_get_producto);

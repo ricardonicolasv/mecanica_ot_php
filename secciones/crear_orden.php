@@ -1,7 +1,10 @@
 <?php
 include_once('../configuraciones/bd.php');
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
+session_start();
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
 $conexionBD = BD::crearInstancia();
 
@@ -142,6 +145,7 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
 
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Crear Orden</button>
+                        <a href="lista_ordenes.php" class="btn btn-warning">Cancelar</a>
                         <button type="reset" class="btn btn-secondary">Limpiar</button>
                     </div>
                 </form>
@@ -252,7 +256,7 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
         });
         
         let costoTotal = totalProductos + totalServicios;
-        document.getElementById("costo_total").value = costoTotal.toFixed(2);
+        document.getElementById("costo_total").value = "$" + Math.round(costoTotal).toLocaleString('es-CL');
     }
 
     document.addEventListener("DOMContentLoaded", function() {

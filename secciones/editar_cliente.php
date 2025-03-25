@@ -1,5 +1,8 @@
 <?php
+session_start();
 include('../configuraciones/bd.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['supervisor', 'administrador']);
 $conexionBD = BD::crearInstancia();
 
 $id_cliente = isset($_GET['id_cliente']) ? $_GET['id_cliente'] : '';
@@ -80,11 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['borrar'])) {
     header("Location: lista_clientes.php");
     exit();
 }
-?>
-
-<?php
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
 ?>
 <main>
     <div class="container">
@@ -125,8 +125,10 @@ include('../templates/vista_admin.php');
 
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" name="editar" value="editar" class="btn btn-success">Actualizar Cliente</button>
+                        <?php if ($_SESSION['rol'] === 'administrador'): ?>
                         <button type="submit" name="borrar" value="borrar" class="btn btn-danger">Borrar Cliente</button>
-                        <a href="lista_clientes.php" class="btn btn-secondary">Cancelar</a>
+                        <?php endif; ?>
+                        <a href="lista_clientes.php" class="btn btn-warning">Cancelar</a>
                     </div>
                 </form>
             </div>

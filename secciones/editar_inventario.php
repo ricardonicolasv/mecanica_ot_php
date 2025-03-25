@@ -1,5 +1,8 @@
 <?php
-include_once '../configuraciones/bd.php';
+session_start();
+include('../configuraciones/bd.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['supervisor', 'administrador']);
 $conexionBD = BD::crearInstancia();
 
 $id_inventario = isset($_GET['id_inventario']) ? intval($_GET['id_inventario']) : 0;
@@ -162,7 +165,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <input type="hidden" name="id_inventario" value="<?php echo $inventario['id_inventario']; ?>">
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" name="accion" value="editar" class="btn btn-primary">Guardar Cambios</button>
+                            <?php if ($_SESSION['rol'] === 'administrador'): ?>
                             <button type="submit" name="accion" value="borrar" class="btn btn-danger" onclick="return confirmarEliminacion();">Borrar de Inventario</button>
+                            <?php endif; ?>
                             <a href="lista_inventario.php" class="btn btn-warning">Cancelar</a>
                         </div>
                     </form>

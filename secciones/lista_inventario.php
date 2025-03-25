@@ -1,5 +1,10 @@
-<?php include('../templates/header_admin.php'); ?>
-<?php include('../templates/vista_admin.php'); ?>
+<?php
+session_start();
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
+?>
 <main>
     <?php include '../secciones/inventario.php'; ?>
 
@@ -32,6 +37,7 @@
                                 <option value="">Todos</option>
                                 <option value="activo" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'activo') ? 'selected' : ''; ?>>Activo</option>
                                 <option value="eliminado" <?php echo (isset($_GET['estado']) && $_GET['estado'] == 'eliminado') ? 'selected' : ''; ?>>Eliminado</option>
+
                             </select>
                         </div>
                         <div class="col-md-2 d-flex">
@@ -136,7 +142,9 @@
                             <th>Fecha Ingreso</th>
                             <th>Fecha Salida</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <?php if (in_array($_SESSION['rol'], ['supervisor', 'administrador'])): ?>
+                                <th>Acciones</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -152,13 +160,18 @@
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-between">
-                                        <a href="editar_inventario.php?id_inventario=<?php echo $item['id_inventario']; ?>" class="btn btn-info me-2">Editar</a>
-                                        <?php if ($item['estado'] == 'activo'): ?>
-                                            <a href="inventario.php?accion=cambiar_estado&id_inventario=<?php echo $item['id_inventario']; ?>&estado=eliminado"
-                                                class="btn btn-danger">Eliminar</a>
-                                        <?php else: ?>
-                                            <a href="inventario.php?accion=cambiar_estado&id_inventario=<?php echo $item['id_inventario']; ?>&estado=activo"
-                                                class="btn btn-success">Restaurar</a>
+                                        <?php if (in_array($_SESSION['rol'], ['supervisor', 'administrador'])): ?>
+                                            <a href="editar_inventario.php?id_inventario=<?php echo $item['id_inventario']; ?>" class="btn btn-info me-2">Editar</a>
+
+                                            <?php if ($item['estado'] == 'activo'): ?>
+                                                <?php if ($_SESSION['rol'] === 'administrador'): ?>
+                                                    <a href="inventario.php?accion=cambiar_estado&id_inventario=<?php echo $item['id_inventario']; ?>&estado=eliminado"
+                                                        class="btn btn-danger">Eliminar</a>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <a href="inventario.php?accion=cambiar_estado&id_inventario=<?php echo $item['id_inventario']; ?>&estado=activo"
+                                                    class="btn btn-success">Restaurar</a>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>

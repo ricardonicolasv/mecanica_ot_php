@@ -1,5 +1,10 @@
 <?php
-include_once '../configuraciones/bd.php';
+session_start();
+include_once('../configuraciones/bd.php');
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['supervisor', 'administrador', 'tecnico']);
 $conexionBD = BD::crearInstancia();
 
 // Capturar el id_producto desde GET
@@ -43,9 +48,6 @@ if ($id_producto) {
     exit();
 }
 ?>
-
-<?php include('../templates/header_admin.php'); ?>
-<?php include('../templates/vista_admin.php'); ?>
 <main>
     <div class="container">
         <div class="row justify-content-center">
@@ -108,7 +110,9 @@ if ($id_producto) {
 
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" name="accion" value="editar" class="btn btn-primary">Guardar Cambios</button>
+                        <?php if ($_SESSION['rol'] === 'administrador'): ?>
                         <button type="submit" name="accion" value="borrar" class="btn btn-danger">Borrar Producto</button>
+                        <?php endif; ?>
                         <a href="lista_producto.php" class="btn btn-warning">Cancelar</a>
                     </div>
                 </form>

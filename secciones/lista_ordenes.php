@@ -1,8 +1,9 @@
 <?php
 session_start(); // Inicia la sesión
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 date_default_timezone_set('America/Santiago'); // Ajusta según tu ubicación
 require_once('../configuraciones/bd.php');
-
 $conexionBD = BD::crearInstancia();
 
 // Procesar eliminación de OT si se envió el formulario
@@ -35,9 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accion']) && $_POST['a
         if ($conexionBD->inTransaction()) {
             $conexionBD->rollBack();
         }
-        echo "Error al eliminar la orden: " . $e->getMessage();
+        die("Error al eliminar la orden: " . $e->getMessage());
     }
 }
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 
 // Obtener valores de los filtros
 $filtro_cliente    = isset($_GET['filtro_cliente']) ? $_GET['filtro_cliente'] : '';
@@ -66,7 +69,7 @@ if (!empty($filtro_rut)) {
     $sqlBase .= " AND Clientes.rut LIKE :filtro_rut";
 }
 if (!empty($filtro_responsable)) {
-    $sqlBase .= " AND Usuarios.id_usuario = :filtro_responsable";
+    $sqlBase .= " AND Usuarios.nombre LIKE :filtro_responsable";
 }
 if (!empty($filtro_estado)) {
     $sqlBase .= " AND Estado_OT.id_estado = :filtro_estado";
@@ -87,7 +90,8 @@ if (!empty($filtro_rut)) {
     $consultaTotal->bindParam(':filtro_rut', $buscarRut, PDO::PARAM_STR);
 }
 if (!empty($filtro_responsable)) {
-    $consultaTotal->bindParam(':filtro_responsable', $filtro_responsable, PDO::PARAM_INT);
+    $buscarResponsable = "%$filtro_responsable%";
+    $consultaTotal->bindParam(':filtro_responsable', $buscarResponsable, PDO::PARAM_STR);
 }
 if (!empty($filtro_estado)) {
     $consultaTotal->bindParam(':filtro_estado', $filtro_estado, PDO::PARAM_INT);
@@ -105,7 +109,7 @@ $sql = "SELECT OT.id_ot, Clientes.nombre_cliente, Clientes.rut, Usuarios.nombre 
                Estado_OT.nombre_estado, 
                DATE_FORMAT(CONVERT_TZ(OT.fecha_creacion, '+00:00', '-04:00'), '%Y-%m-%d %H:%i:%s') AS fecha_creacion, 
                OT.costo_total
-        " . $sqlBase . " ORDER BY OT.id_ot ASC LIMIT $offset, $limit";
+        " . $sqlBase . " ORDER BY OT.id_ot DESC LIMIT $offset, $limit";
 
 $consulta = $conexionBD->prepare($sql);
 if (!empty($filtro_cliente)) {
@@ -115,7 +119,7 @@ if (!empty($filtro_rut)) {
     $consulta->bindParam(':filtro_rut', $buscarRut, PDO::PARAM_STR);
 }
 if (!empty($filtro_responsable)) {
-    $consulta->bindParam(':filtro_responsable', $filtro_responsable, PDO::PARAM_INT);
+    $consulta->bindParam(':filtro_responsable', $buscarResponsable, PDO::PARAM_STR);
 }
 if (!empty($filtro_estado)) {
     $consulta->bindParam(':filtro_estado', $filtro_estado, PDO::PARAM_INT);
@@ -128,14 +132,8 @@ $consulta->execute();
 $lista_ordenes = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener listas para los filtros desplegables
-$clientes = $conexionBD->query("SELECT id_cliente, nombre_cliente FROM Clientes")->fetchAll(PDO::FETCH_ASSOC);
-$responsables = $conexionBD->query("SELECT id_usuario, nombre FROM Usuarios")->fetchAll(PDO::FETCH_ASSOC);
 $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
-<?php include('../templates/header_admin.php'); ?>
-<?php include('../templates/vista_admin.php'); ?>
-
 <main>
     <div class="container">
         <h1 class="text-center">Órdenes de Trabajo</h1>
@@ -153,14 +151,7 @@ $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")-
                 </div>
                 <!-- Filtro por Responsable -->
                 <div class="col-md-2">
-                    <select name="filtro_responsable" class="form-control">
-                        <option value="">Todos los responsables</option>
-                        <?php foreach ($responsables as $responsable):
-                            $selected = ($filtro_responsable == $responsable['id_usuario']) ? 'selected' : '';
-                        ?>
-                            <option value="<?= $responsable['id_usuario'] ?>" <?= $selected ?>><?= $responsable['nombre'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="text" name="filtro_responsable" class="form-control" placeholder="Buscar Responsable" value="<?= htmlspecialchars($filtro_responsable); ?>">
                 </div>
                 <!-- Filtro por Estado -->
                 <div class="col-md-2">
@@ -227,12 +218,14 @@ $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")-
                             <td><?= $orden['fecha_creacion'] ?></td>
                             <td><?php echo '$' . number_format($orden['costo_total'], 0, ',', '.'); ?></td>
                             <td>
-                                <a href="editar_orden.php?id=<?= $orden['id_ot'] ?>" class="btn btn-warning">Editar</a>
-                                <form action="lista_ordenes.php" method="POST" style="display:inline;" onsubmit="return confirmarEliminacion()">
-                                    <input type="hidden" name="id_ot" value="<?= $orden['id_ot'] ?>">
-                                    <input type="hidden" name="accion" value="eliminar">
-                                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                                </form>
+                                <a href="editar_orden.php?id=<?= $orden['id_ot'] ?>" class="btn btn-info">Editar</a>
+                                <?php if ($_SESSION['rol'] === 'administrador'): ?>
+                                    <form action="lista_ordenes.php" method="POST" style="display:inline;" onsubmit="return confirmarEliminacion()">
+                                        <input type="hidden" name="id_ot" value="<?= $orden['id_ot'] ?>">
+                                        <input type="hidden" name="accion" value="eliminar">
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

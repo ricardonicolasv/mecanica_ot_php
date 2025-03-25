@@ -1,8 +1,11 @@
 <?php
 require_once('../configuraciones/bd.php');
 include('../secciones/clientes.php');
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
+session_start();
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 ?>
 <main>
     <div class="container">
@@ -104,6 +107,7 @@ include('../templates/vista_admin.php');
                     </div>
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" name="accion" value="agregar" class="btn btn-primary">Crear Cliente</button>
+                        <a href="lista_clientes.php" class="btn btn-warning">Cancelar</a>
                         <button type="reset" class="btn btn-secondary">Limpiar</button>
                     </div>
                 </form>

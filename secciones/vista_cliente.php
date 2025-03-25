@@ -3,6 +3,8 @@ session_start();
 require_once('../configuraciones/bd.php');
 include('../secciones/clientes.php'); 
 include('../templates/header.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso('cliente');
 
 // Verifica si el cliente está autenticado. Si no, redirige a la página de login o registro.
 if (!isset($_SESSION['cliente'])) {

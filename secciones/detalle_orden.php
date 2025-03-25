@@ -1,6 +1,11 @@
 <?php
 date_default_timezone_set('America/Santiago');
-require_once('../configuraciones/bd.php');
+session_start();
+include('../configuraciones/bd.php');
+include('../templates/header_admin.php'); 
+include('../templates/vista_admin.php'); 
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
 $conexionBD = BD::crearInstancia();
 
@@ -94,9 +99,6 @@ $consulta_historial = $conexionBD->prepare($sql_historial);
 $consulta_historial->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
 $consulta_historial->execute();
 $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
-
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
 ?>
 
 <main>
@@ -171,7 +173,7 @@ include('../templates/vista_admin.php');
 
             <div class="mt-4">
                 <a href="lista_ordenes.php" class="btn btn-secondary">Volver</a>
-                <a href="editar_orden.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-warning">Editar</a>
+                <a href="editar_orden.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-info">Editar</a>
                 <a href="reporte.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-primary">Reporte</a>
             </div>
             </div>

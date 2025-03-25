@@ -1,5 +1,10 @@
-<?php include('../templates/header_admin.php'); ?>
-<?php include('../templates/vista_admin.php'); ?>
+<?php
+session_start();
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
+?>
 <main>
     <?php include '../secciones/producto.php'; ?>
     <div class="container">
