@@ -10,7 +10,7 @@ function verificarAcceso($rolesPermitidos = []) {
     }
 
     if (!isset($_SESSION['rol'])) {
-        header('Location: ../login/login.php');
+        header('Location: ../secciones/login.php');
         exit();
     }
 

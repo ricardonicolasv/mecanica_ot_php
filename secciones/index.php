@@ -1,11 +1,18 @@
 <?php
 session_start();
 include('../configuraciones/bd.php');
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador', 'cliente']);
+
+// Incluir header según rol
+if ($_SESSION['rol'] === 'cliente') {
+    include('../templates/header_cliente.php');
+} else {
+    include('../templates/header_admin.php');
+    include('../templates/vista_admin.php');
+}
 ?>
+
 <main>
 
     <section class="intro">

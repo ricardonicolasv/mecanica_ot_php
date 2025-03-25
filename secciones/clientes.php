@@ -15,8 +15,8 @@ $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 if ($accion != '') {
     switch ($accion) {
         case 'agregar':
-            $sql = "INSERT INTO Clientes (nombre_cliente, apellido_cliente, email, password, rut, direccion, nro_contacto) 
-                    VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto)";
+            $sql = "INSERT INTO Clientes (nombre_cliente, apellido_cliente, email, password, rut, direccion, nro_contacto, rol) 
+        VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto, 'cliente')";
             $consulta = $conexionBD->prepare($sql);
             $consulta->bindParam(':nombre_cliente', $nombre_cliente);
             $consulta->bindParam(':apellido_cliente', $apellido_cliente);
@@ -30,8 +30,8 @@ if ($accion != '') {
             exit();
             break;
         case 'agregar_cliente':
-            $sql = "INSERT INTO Clientes (nombre_cliente, apellido_cliente, email, password, rut, direccion, nro_contacto) 
-                        VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto)";
+            $sql = "INSERT INTO Clientes (nombre_cliente, apellido_cliente, email, password, rut, direccion, nro_contacto, rol) 
+        VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto, 'cliente')";
             $consulta = $conexionBD->prepare($sql);
             $consulta->bindParam(':nombre_cliente', $nombre_cliente);
             $consulta->bindParam(':apellido_cliente', $apellido_cliente);

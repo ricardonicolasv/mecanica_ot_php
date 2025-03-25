@@ -19,7 +19,7 @@
                 <div class="col-12">
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
                         <div class="container-fluid">
-                            <a class="navbar-brand" href="../index.php">Mecanica Industrial</a>
+                            <a class="navbar-brand" href="index.php">Mecanica Industrial</a>
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
                                 aria-label="Toggle navigation">
@@ -28,23 +28,19 @@
                             <div class="collapse navbar-collapse" id="navbarNav">
                                 <!-- Elementos en la parte izquierda -->
                                 <ul class="navbar-nav">
+                                    <?php if ($_SESSION['rol'] === 'cliente'): ?>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#">Servicios</a>
+                                        <a class="nav-link" href="/app/secciones/lista_ordenes_cliente.php">Mis Ordenes de Trabajo</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="#">Equipamiento</a>
+                                        <a class="nav-link" href="/app/secciones/vista_cliente.php">Cuenta Cliente</a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#">Contacto</a>
-                                    </li>
+                                    <?php endif; ?>
                                 </ul>
                                 <!-- Elementos en la parte derecha -->
                                 <ul class="navbar-nav ms-auto">
                                     <li class="nav-item">
-                                        <a class="nav-link" href="/app/secciones/login.php">Login</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="/app/secciones/crear_cliente.php">Registro</a>
+                                        <a class="nav-link" href="../index.php">Cerrar Sesion</a>
                                     </li>
                                 </ul>
                             </div>

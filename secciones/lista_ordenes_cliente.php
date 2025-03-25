@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 require_once('../configuraciones/bd.php');
 include('../configuraciones/verificar_acceso.php');
@@ -35,7 +35,8 @@ $sql = "SELECT OT.id_ot,
         FROM OT
         INNER JOIN Estado_OT ON OT.id_estado = Estado_OT.id_estado
         INNER JOIN Usuarios ON OT.id_responsable = Usuarios.id_usuario
-        WHERE OT.estado != 'Eliminada' AND OT.id_cliente = :id_cliente
+        WHERE OT.estado != 'Eliminada' 
+        AND OT.id_cliente = :id_cliente  -- Filtrar por id_cliente
         ORDER BY OT.id_ot DESC
         LIMIT $offset, $limit";
 
@@ -71,7 +72,7 @@ $ordenes = $consulta->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= $orden['fecha_creacion'] ?></td>
                         <td>$<?= number_format($orden['costo_total'], 0, ',', '.') ?></td>
                         <td>
-                            <a href="detalle_orden.php?id=<?= $orden['id_ot'] ?>" class="btn btn-sm btn-primary">Ver</a>
+                            <a href="detalle_orden_cliente.php?id=<?= $orden['id_ot'] ?>" class="btn btn-sm btn-primary">Ver</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

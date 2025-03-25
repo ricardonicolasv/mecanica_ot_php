@@ -2,6 +2,9 @@
 require_once('../configuraciones/bd.php');
 include('../secciones/clientes.php'); 
 include('../templates/header.php');
+session_start();
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['cliente']);
 ?>
 <main>
     <div class="container">

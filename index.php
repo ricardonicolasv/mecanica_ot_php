@@ -41,10 +41,10 @@
                                 <!-- Elementos en la parte derecha -->
                                 <ul class="navbar-nav ms-auto">
                                     <li class="nav-item">
-                                        <a class="nav-link" href="secciones/login.php">Login</a>
+                                        <a class="nav-link" href="/app/secciones/login.php">Login</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="secciones/crear_cliente.php">Registro</a>
+                                        <a class="nav-link" href="/app/secciones/crear_cliente.php">Registro</a>
                                     </li>
                                 </ul>
                             </div>
