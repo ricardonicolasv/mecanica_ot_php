@@ -18,14 +18,13 @@ if ($accion != '') {
 
         switch ($accion) {
             case 'agregar':
-                $descripcion_actividad = $_POST['descripcion_actividad'] ?? '';
                 try {
                     // Verificar si ya hay una transacción activa antes de comenzar una nueva
                     if (!$conexionBD->inTransaction()) {
                         $conexionBD->beginTransaction();
                     }
 
-                    // Insertar en OT sin costo_total
+                    // Insertar en OT sin costo_total ni archivo_adjunto
                     $sql_ot = "INSERT INTO OT (id_cliente, id_responsable, id_estado, fecha_creacion) 
                                VALUES (:id_cliente, :id_responsable, :id_estado, :fecha_creacion)";
                     $consulta_ot = $conexionBD->prepare($sql_ot);
@@ -36,100 +35,120 @@ if ($accion != '') {
                     $consulta_ot->execute();
                     $id_ot = $conexionBD->lastInsertId();
 
-                    // Registrar en historial que se creó una nueva OT
-                    $id_responsable = $_SESSION['id_usuario'] ?? $id_responsable ?? null; // respaldo por seguridad
-                    $sql_historial = "INSERT INTO historial_ot (id_ot, id_responsable, campo_modificado, valor_anterior, valor_nuevo, fecha_modificacion) 
-                  VALUES (:id_ot, :id_responsable, 'Creación', 'N/A', 'Nueva OT creada', NOW())";
-                    $stmt_historial = $conexionBD->prepare($sql_historial);
-                    $stmt_historial->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                    $stmt_historial->bindParam(':id_responsable', $id_responsable, PDO::PARAM_INT);
-                    $stmt_historial->execute();
+                    // Subir archivo (si hay)
+                    if (!empty($_FILES['archivos_adjuntos']['name'][0])) {
+                        $totalArchivos = count($_FILES['archivos_adjuntos']['name']);
 
+                        for ($i = 0; $i < $totalArchivos; $i++) {
+                            if ($_FILES['archivos_adjuntos']['error'][$i] === UPLOAD_ERR_OK) {
+                                $nombreTmp = $_FILES['archivos_adjuntos']['tmp_name'][$i];
+                                $nombreOriginal = basename($_FILES['archivos_adjuntos']['name'][$i]);
+                                $tipoArchivo = $_FILES['archivos_adjuntos']['type'][$i];
+                                $rutaWeb = 'archivos_adjuntos/' . uniqid() . '_' . $nombreOriginal;
+                                $rutaCarpeta = __DIR__ . '/archivos_adjuntos';
+                                $rutaDestinoFisica = $rutaCarpeta . '/' . basename($rutaWeb);
 
-                    // Insertar el servicio en la tabla Servicios_OT
-                    if (!empty($_POST['id_servicio'])) {
-                        $id_servicio = $_POST['id_servicio'];
-                        $sql_servicio = "INSERT INTO Servicios_OT (id_ot, id_servicio) VALUES (:id_ot, :id_servicio)";
-                        $consulta_servicio = $conexionBD->prepare($sql_servicio);
-                        $consulta_servicio->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                        $consulta_servicio->bindParam(':id_servicio', $id_servicio, PDO::PARAM_INT);
-                        $consulta_servicio->execute();
-                    }
-                    // Insertar descripción como fila separada en Detalle_OT (sin producto)
-                    $sql_detalle = "INSERT INTO Detalle_OT (id_ot, descripcion_actividad) VALUES (:id_ot, :descripcion_actividad)";
-                    $consulta_detalle = $conexionBD->prepare($sql_detalle);
-                    $consulta_detalle->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                    $consulta_detalle->bindParam(':descripcion_actividad', $descripcion_actividad, PDO::PARAM_STR);
-                    $consulta_detalle->execute();
-                    // Insertar descripción de la OT si no hay productos
-                    if (empty($_POST['productos'])) {
-                        $sql_detalle = "INSERT INTO Detalle_OT (id_ot, descripcion_actividad) VALUES (:id_ot, :descripcion_actividad)";
-                        $consulta_detalle = $conexionBD->prepare($sql_detalle);
-                        $consulta_detalle->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                        $consulta_detalle->bindParam(':descripcion_actividad', $descripcion_actividad, PDO::PARAM_STR);
-                        $consulta_detalle->execute();
-                    }
+                                // 🛡 Validación de archivo
+                                $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+                                $tamanoMaximo = 5 * 1024 * 1024; // 5 MB
 
-                    // Insertar productos y descontar inventario
-                    if (!empty($_POST['productos'])) {
-                        foreach ($_POST['productos'] as $key => $id_producto) {
-                            $cantidad_solicitada = $_POST['cantidades'][$key];
+                                $extension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
+                                if (!in_array($extension, $extensionesPermitidas)) {
+                                    throw new Exception("Archivo no permitido: $nombreOriginal");
+                                }
+                                if ($_FILES['archivos_adjuntos']['size'][$i] > $tamanoMaximo) {
+                                    throw new Exception("Archivo demasiado grande: $nombreOriginal");
+                                }
 
-                            // Registrar productos en Detalle_OT
-                            $sql_producto = "INSERT INTO Detalle_OT (id_ot, id_producto, cantidad) 
-                 VALUES (:id_ot, :id_producto, :cantidad)";
-                            $consulta_producto = $conexionBD->prepare($sql_producto);
-                            $consulta_producto->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                            $consulta_producto->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-                            $consulta_producto->bindParam(':cantidad', $cantidad_solicitada, PDO::PARAM_INT);
-                            $consulta_producto->execute();
+                                if (!file_exists($rutaCarpeta)) {
+                                    mkdir($rutaCarpeta, 0777, true);
+                                }
 
-
-                            // Descontar del inventario
-                            $sql_actualizar_inventario = "UPDATE Inventario SET cantidad = cantidad - :cantidad_solicitada 
-                                                          WHERE id_producto = :id_producto";
-                            $consulta_actualizar_inventario = $conexionBD->prepare($sql_actualizar_inventario);
-                            $consulta_actualizar_inventario->bindParam(':cantidad_solicitada', $cantidad_solicitada, PDO::PARAM_INT);
-                            $consulta_actualizar_inventario->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
-                            $consulta_actualizar_inventario->execute();
+                                if (move_uploaded_file($nombreTmp, $rutaDestinoFisica)) {
+                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo) 
+                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo)";
+                                    $stmt_archivo = $conexionBD->prepare($sql_archivo);
+                                    $stmt_archivo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                                    $stmt_archivo->bindParam(':ruta_archivo', $rutaWeb, PDO::PARAM_STR);
+                                    $stmt_archivo->bindParam(':tipo_archivo', $tipoArchivo, PDO::PARAM_STR);
+                                    $stmt_archivo->execute();
+                                }
+                            }
                         }
                     }
 
-                    // Calcular el nuevo costo total después de agregar productos y servicios
-                    $sql_calcular_costo = "SELECT 
-                                                (SELECT COALESCE(SUM(d.cantidad * p.costo_unitario), 0) 
-                                                 FROM Detalle_OT d
-                                                 LEFT JOIN Productos p ON d.id_producto = p.id_producto
-                                                 WHERE d.id_ot = :id_ot) 
-                                                +
-                                                (SELECT COALESCE(SUM(s.costo_servicio), 0) 
-                                                 FROM Servicios_OT sot
-                                                 LEFT JOIN Servicios s ON sot.id_servicio = s.id_servicio
-                                                 WHERE sot.id_ot = :id_ot)
-                                                AS costo_total";
+                    // Insertar servicios
+                    if (!empty($_POST['id_servicio'])) {
+                        foreach ($_POST['id_servicio'] as $servicio) {
+                            $sql_servicio = "INSERT INTO Servicios_OT (id_ot, id_servicio) VALUES (:id_ot, :id_servicio)";
+                            $consulta_servicio = $conexionBD->prepare($sql_servicio);
+                            $consulta_servicio->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                            $consulta_servicio->bindParam(':id_servicio', $servicio, PDO::PARAM_INT);
+                            $consulta_servicio->execute();
+                        }
+                    }
 
-                    $consulta_costo = $conexionBD->prepare($sql_calcular_costo);
-                    $consulta_costo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                    $consulta_costo->execute();
-                    $costo_total = $consulta_costo->fetch(PDO::FETCH_ASSOC)['costo_total'];
+                    // Insertar descripción (siempre como fila sin producto)
+                    if (!empty($descripcion_actividad)) {
+                        $sql_detalle = "INSERT INTO Detalle_OT (id_ot, descripcion_actividad) VALUES (:id_ot, :descripcion)";
+                        $consulta_detalle = $conexionBD->prepare($sql_detalle);
+                        $consulta_detalle->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                        $consulta_detalle->bindParam(':descripcion', $descripcion_actividad, PDO::PARAM_STR);
+                        $consulta_detalle->execute();
+                    }
 
-                    // Actualizar la OT con el nuevo costo total
-                    $sql_actualizar_costo = "UPDATE OT SET costo_total = :costo_total WHERE id_ot = :id_ot";
-                    $consulta_actualizar_costo = $conexionBD->prepare($sql_actualizar_costo);
-                    $consulta_actualizar_costo->bindParam(':costo_total', $costo_total);
-                    $consulta_actualizar_costo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                    $consulta_actualizar_costo->execute();
+                    // Insertar productos (si los hay) y descontar inventario
+                    if (!empty($_POST['productos'])) {
+                        foreach ($_POST['productos'] as $key => $id_producto) {
+                            $cantidad = $_POST['cantidades'][$key];
 
-                    // Confirmar la transacción
+                            // Insertar en detalle
+                            $sql_producto = "INSERT INTO Detalle_OT (id_ot, id_producto, cantidad) VALUES (:id_ot, :id_producto, :cantidad)";
+                            $consulta_producto = $conexionBD->prepare($sql_producto);
+                            $consulta_producto->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                            $consulta_producto->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+                            $consulta_producto->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
+                            $consulta_producto->execute();
+
+                            // Descontar inventario
+                            $sql_descuento = "UPDATE Inventario SET cantidad = cantidad - :cantidad WHERE id_producto = :id_producto";
+                            $stmt_descuento = $conexionBD->prepare($sql_descuento);
+                            $stmt_descuento->bindParam(':cantidad', $cantidad, PDO::PARAM_INT);
+                            $stmt_descuento->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+                            $stmt_descuento->execute();
+                        }
+                    }
+
+                    // Calcular y actualizar el costo total
+                    $sql_costo = "SELECT 
+                                    (SELECT COALESCE(SUM(d.cantidad * p.costo_unitario), 0)
+                                     FROM Detalle_OT d
+                                     LEFT JOIN Productos p ON d.id_producto = p.id_producto
+                                     WHERE d.id_ot = :id_ot)
+                                    +
+                                    (SELECT COALESCE(SUM(s.costo_servicio), 0)
+                                     FROM Servicios_OT so
+                                     INNER JOIN Servicios s ON so.id_servicio = s.id_servicio
+                                     WHERE so.id_ot = :id_ot) AS costo_total";
+                    $stmt_costo = $conexionBD->prepare($sql_costo);
+                    $stmt_costo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $stmt_costo->execute();
+                    $costo_total = $stmt_costo->fetchColumn();
+
+                    $sql_update_costo = "UPDATE OT SET costo_total = :costo_total WHERE id_ot = :id_ot";
+                    $stmt_update_costo = $conexionBD->prepare($sql_update_costo);
+                    $stmt_update_costo->bindParam(':costo_total', $costo_total);
+                    $stmt_update_costo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $stmt_update_costo->execute();
+
                     $conexionBD->commit();
                     header("Location: lista_ordenes.php");
                     exit();
                 } catch (Exception $e) {
-                    // Revertir la transacción en caso de error
                     if ($conexionBD->inTransaction()) {
                         $conexionBD->rollBack();
                     }
-                    die("Error: " . $e->getMessage());
+                    die("Error al agregar la orden: " . $e->getMessage());
                 }
                 break;
 
@@ -238,7 +257,63 @@ if ($accion != '') {
                             ]);
                         }
                     }
+                    if (!empty($_POST['eliminar_archivos'])) {
+                        foreach ($_POST['eliminar_archivos'] as $id_archivo) {
+                            // Obtener ruta del archivo
+                            $stmt = $conexionBD->prepare("SELECT ruta_archivo FROM ArchivosAdjuntos_OT WHERE id_archivo = :id");
+                            $stmt->bindParam(':id', $id_archivo, PDO::PARAM_INT);
+                            $stmt->execute();
+                            $ruta = $stmt->fetchColumn();
 
+                            // Eliminar archivo del sistema
+                            if ($ruta && file_exists(__DIR__ . '/../' . $ruta)) {
+                                unlink(__DIR__ . '/../' . $ruta);
+                            }
+
+                            // Eliminar registro de la base de datos
+                            $stmt = $conexionBD->prepare("DELETE FROM ArchivosAdjuntos_OT WHERE id_archivo = :id");
+                            $stmt->bindParam(':id', $id_archivo, PDO::PARAM_INT);
+                            $stmt->execute();
+                        }
+                    }
+                    if (!empty($_FILES['archivos_adjuntos']['name'][0])) {
+                        $totalArchivos = count($_FILES['archivos_adjuntos']['name']);
+                        for ($i = 0; $i < $totalArchivos; $i++) {
+                            if ($_FILES['archivos_adjuntos']['error'][$i] === UPLOAD_ERR_OK) {
+                                $nombreTmp = $_FILES['archivos_adjuntos']['tmp_name'][$i];
+                                $nombreOriginal = basename($_FILES['archivos_adjuntos']['name'][$i]);
+                                $tipoArchivo = $_FILES['archivos_adjuntos']['type'][$i];
+                                $rutaWeb = 'archivos_adjuntos/' . uniqid() . '_' . $nombreOriginal;
+                                $rutaDestino = __DIR__ . '/../' . $rutaWeb;
+
+                                // Validación
+                                $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+                                $tamanoMaximo = 5 * 1024 * 1024;
+                                $extension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
+
+                                if (!in_array($extension, $extensionesPermitidas)) {
+                                    throw new Exception("Archivo no permitido: $nombreOriginal");
+                                }
+                                if ($_FILES['archivos_adjuntos']['size'][$i] > $tamanoMaximo) {
+                                    throw new Exception("Archivo muy grande: $nombreOriginal");
+                                }
+
+                                if (!file_exists(dirname($rutaDestino))) {
+                                    mkdir(dirname($rutaDestino), 0777, true);
+                                }
+
+                                if (move_uploaded_file($nombreTmp, $rutaDestino)) {
+                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo) 
+                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo)";
+                                    $stmt_archivo = $conexionBD->prepare($sql_archivo);
+                                    $stmt_archivo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                                    $stmt_archivo->bindParam(':ruta_archivo', $rutaWeb, PDO::PARAM_STR);
+                                    $stmt_archivo->bindParam(':tipo_archivo', $tipoArchivo, PDO::PARAM_STR);
+                                    $stmt_archivo->execute();
+                                }
+                            }
+                        }
+                    }
                     // Eliminar aquellos registros de Servicios_OT que ya no se enviaron
                     $posted_service_ot_ids = array_filter($id_servicio_ot_post, function ($val) {
                         return !empty($val);

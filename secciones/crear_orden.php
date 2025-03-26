@@ -1,8 +1,8 @@
 <?php
 include_once('../configuraciones/bd.php');
 session_start();
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
@@ -34,7 +34,7 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
         <div class="row justify-content-center">
             <div class="col-8">
                 <h1 class="text-center">Crear Orden de Trabajo</h1>
-                <form action="ordenes_trabajo.php" method="post">
+                <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
                     <!-- Enviar acción 'agregar' para crear la orden -->
                     <input type="hidden" name="accion" value="agregar">
 
@@ -143,6 +143,13 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
                         <textarea class="form-control" id="descripcion_actividad" name="descripcion_actividad" rows="3" required></textarea>
                     </div>
 
+                    <!-- Archivo Adjunto -->
+                    <div class="mb-3">
+                        <label for="archivo_adjunto" class="form-label">Archivos Adjuntos</label>
+                        <input class="form-control" type="file" name="archivos_adjuntos[]" id="archivo_adjunto" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                    </div>
+
+
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Crear Orden</button>
                         <a href="lista_ordenes.php" class="btn btn-warning">Cancelar</a>
@@ -247,14 +254,14 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
             let costoUnitario = parseFloat(selectProducto.selectedOptions[0]?.getAttribute("data-costo")) || 0;
             totalProductos += cantidad * costoUnitario;
         });
-        
+
         let totalServicios = 0;
         document.querySelectorAll("tbody#servicios_lista tr").forEach(row => {
             let selectServicio = row.querySelector("select[name='id_servicio[]']");
             let costoServicio = parseFloat(selectServicio.selectedOptions[0]?.getAttribute("data-costo")) || 0;
             totalServicios += costoServicio;
         });
-        
+
         let costoTotal = totalProductos + totalServicios;
         document.getElementById("costo_total").value = "$" + Math.round(costoTotal).toLocaleString('es-CL');
     }

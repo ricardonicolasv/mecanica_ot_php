@@ -5,7 +5,7 @@ date_default_timezone_set('America/Santiago');
 require('../librerias/fpdf/fpdf.php');
 require_once('../configuraciones/bd.php');
 include('../configuraciones/verificar_acceso.php');
-verificarAcceso(['supervisor', 'administrador', 'tecnico']);
+verificarAcceso(['supervisor', 'administrador', 'tecnico', 'cliente']);
 
 // Extensión de FPDF para filas adaptables
 class PDF extends FPDF

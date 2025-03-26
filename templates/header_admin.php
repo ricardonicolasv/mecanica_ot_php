@@ -11,6 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
 </head>
+
 <body>
     <header>
         <div class="container">
@@ -18,7 +19,10 @@
                 <div class="col-12">
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
                         <div class="container-fluid">
-                            <a class="navbar-brand" href="../secciones/index.php">Mecanica Industrial</a>
+                            <a class="navbar-brand" href="../secciones/index.php">
+                                <img src="../secciones/img/logo.png" alt="Logo" style="height: 60px;">
+                            </a>
+
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
                                 aria-label="Toggle navigation">
@@ -39,14 +43,19 @@
                                 </ul>
                                 <!-- Elementos en la parte derecha -->
                                 <ul class="navbar-nav ms-auto">
+                                    <?php if (isset($_SESSION['nombre'])): ?>
+                                        <li class="nav-item d-flex align-items-center me-2">
+                                            <span class="nav-link disabled">👤 <?= htmlspecialchars($_SESSION['nombre']) ?></span>
+                                        </li>
+                                    <?php endif; ?>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="../index.php">Cerrar Sesion</a>
+                                        <a class="nav-link" href="../index.php">Cerrar Sesión</a>
                                     </li>
                                 </ul>
+
                             </div>
                         </div>
                     </nav>
                 </div>
             </div>
-    </header> 
-    
+    </header>

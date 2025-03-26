@@ -1,8 +1,8 @@
 <?php
 session_start();
 include('../configuraciones/bd.php');
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['supervisor', 'administrador', 'tecnico']);
 
@@ -86,11 +86,12 @@ $costo_total_calculado = $total_productos + $total_servicios;
         <div class="row justify-content-center">
             <div class="col-8">
                 <h1 class="text-center">Editar Orden de Trabajo</h1>
-                <form action="ordenes_trabajo.php" method="post">
+                <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id_ot" value="<?= $id_ot; ?>">
                     <input type="hidden" name="accion" value="editar">
 
-                    <!-- Cliente -->
+                    <!-- Información del Cliente -->
+                    <h4>Información del Cliente</h4>
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
                         <select class="form-select" id="id_cliente" name="id_cliente" required onchange="actualizarDatosCliente()">
@@ -105,8 +106,6 @@ $costo_total_calculado = $total_productos + $total_servicios;
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <!-- Información del Cliente -->
                     <div class="mb-3">
                         <label class="form-label">Correo Electrónico:</label>
                         <input type="text" id="cliente_email" class="form-control" readonly>
@@ -116,7 +115,8 @@ $costo_total_calculado = $total_productos + $total_servicios;
                         <input type="text" id="cliente_contacto" class="form-control" readonly>
                     </div>
 
-                    <!-- Responsable -->
+                    <!-- Datos de la Orden -->
+                    <h4>Datos de la Orden</h4>
                     <div class="mb-3">
                         <label for="id_responsable" class="form-label">Responsable</label>
                         <select class="form-select" id="id_responsable" name="id_responsable" required>
@@ -129,8 +129,6 @@ $costo_total_calculado = $total_productos + $total_servicios;
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <!-- Estado -->
                     <div class="mb-3">
                         <label for="id_estado" class="form-label">Estado</label>
                         <select class="form-select" id="id_estado" name="id_estado" required>
@@ -143,109 +141,143 @@ $costo_total_calculado = $total_productos + $total_servicios;
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <!-- Sección de Tipos de Trabajo -->
-                    <h4>Tipos de Trabajo</h4>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Tipo de Trabajo</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="servicios_lista">
-                            <?php if (!empty($servicios_ot)): ?>
-                                <?php foreach ($servicios_ot as $servicio_asociado): ?>
-                                    <tr>
-                                        <td>
-                                            <!-- Si ya existe un registro, enviamos también su id para luego identificar si se actualiza o se elimina -->
-                                            <input type="hidden" name="id_servicio_ot[]" value="<?= htmlspecialchars($servicio_asociado['id_servicio_ot']) ?>">
-                                            <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
-                                                <option value="" disabled>Seleccione un Tipo de Trabajo</option>
-                                                <?php foreach ($servicios as $servicio): ?>
-                                                    <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>"
-                                                        data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>"
-                                                        <?= ($servicio['id_servicio'] == $servicio_asociado['id_servicio']) ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($servicio['nombre_servicio']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </td>
-                                        <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td>
-                                        <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
-                                            <option value="" disabled selected>Seleccione un Tipo de Trabajo</option>
-                                            <?php foreach ($servicios as $servicio): ?>
-                                                <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>" data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>">
-                                                    <?= htmlspecialchars($servicio['nombre_servicio']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                    <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn btn-success" onclick="agregarServicio()">Agregar Tipo de Trabajo</button>
-
-                    <!-- Costo Total -->
-                    <div class="mb-3 mt-3">
-                        <label for="costo_total" class="form-label">Costo Total</label>
-                        <input type="text" class="form-control" id="costo_total" name="costo_total"
-                            value="<?= number_format((float)$costo_total_calculado, 2, ',', '.') ?>" readonly>
-                    </div>
-
-                    <!-- Descripción de la OT -->
                     <div class="mb-3">
                         <label for="descripcion_actividad" class="form-label">Descripción de la Orden</label>
                         <textarea class="form-control" id="descripcion_actividad" name="descripcion_actividad" rows="3" required><?= $orden['descripcion_actividad']; ?></textarea>
                     </div>
 
-                    <!-- Sección de Productos Asociados -->
-                    <h4>Productos Asociados</h4>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Cantidad</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productos_lista">
-                            <?php foreach ($productos as $producto): ?>
+                    <!-- Detalles de Trabajo -->
+                    <h4>Detalles de Trabajo</h4>
+                    <!-- Tipos de Trabajo -->
+                    <div class="mb-3">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <input type="hidden" name="id_detalle[]" value="<?= htmlspecialchars($producto['id_detalle']) ?>">
-                                        <select class="form-select" name="id_producto[]" onchange="actualizarCostoTotal()">
-                                            <option value="" disabled>Seleccione un Producto</option>
-                                            <?php
-                                            $consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
-                                            $todosLosProductos = $consultaTodosProductos->fetchAll(PDO::FETCH_ASSOC);
-                                            foreach ($todosLosProductos as $prod): ?>
-                                                <option value="<?= htmlspecialchars($prod['id_producto']) ?>"
-                                                    data-costo="<?= htmlspecialchars($prod['costo_unitario']) ?>"
-                                                    <?= ($prod['id_producto'] == $producto['id_producto']) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($prod['marca'] . ' ' . $prod['modelo']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" class="form-control" name="cantidad[]" value="<?= htmlspecialchars($producto['cantidad']) ?>" min="1" onchange="actualizarCostoTotal()">
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button>
-                                    </td>
+                                    <th>Tipo de Trabajo</th>
+                                    <th>Acción</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <button type="button" class="btn btn-success" onclick="agregarProducto()">Agregar Producto</button>
+                            </thead>
+                            <tbody id="servicios_lista">
+                                <?php if (!empty($servicios_ot)): ?>
+                                    <?php foreach ($servicios_ot as $servicio_asociado): ?>
+                                        <tr>
+                                            <td>
+                                                <input type="hidden" name="id_servicio_ot[]" value="<?= htmlspecialchars($servicio_asociado['id_servicio_ot']) ?>">
+                                                <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
+                                                    <option value="" disabled>Seleccione un Tipo de Trabajo</option>
+                                                    <?php foreach ($servicios as $servicio): ?>
+                                                        <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>"
+                                                            data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>"
+                                                            <?= ($servicio['id_servicio'] == $servicio_asociado['id_servicio']) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($servicio['nombre_servicio']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
+                                                <option value="" disabled selected>Seleccione un Tipo de Trabajo</option>
+                                                <?php foreach ($servicios as $servicio): ?>
+                                                    <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>" data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>">
+                                                        <?= htmlspecialchars($servicio['nombre_servicio']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-success" onclick="agregarServicio()">Agregar Tipo de Trabajo</button>
+                    </div>
+
+                    <!-- Productos Asociados -->
+                    <h4>Productos Asociados</h4>
+                    <div class="mb-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productos_lista">
+                                <?php foreach ($productos as $producto): ?>
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" name="id_detalle[]" value="<?= htmlspecialchars($producto['id_detalle']) ?>">
+                                            <select class="form-select" name="id_producto[]" onchange="actualizarCostoTotal()">
+                                                <option value="" disabled>Seleccione un Producto</option>
+                                                <?php
+                                                $consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
+                                                $todosLosProductos = $consultaTodosProductos->fetchAll(PDO::FETCH_ASSOC);
+                                                foreach ($todosLosProductos as $prod): ?>
+                                                    <option value="<?= htmlspecialchars($prod['id_producto']) ?>"
+                                                        data-costo="<?= htmlspecialchars($prod['costo_unitario']) ?>"
+                                                        <?= ($prod['id_producto'] == $producto['id_producto']) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($prod['marca'] . ' ' . $prod['modelo']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" name="cantidad[]" value="<?= htmlspecialchars($producto['cantidad']) ?>" min="1" onchange="actualizarCostoTotal()">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-success" onclick="agregarProducto()">Agregar Producto</button>
+                    </div>
+
+                    <!-- Archivos Adjuntos -->
+                    <?php
+                    $sql_archivos = "SELECT * FROM ArchivosAdjuntos_OT WHERE id_ot = :id_ot";
+                    $stmt_archivos = $conexionBD->prepare($sql_archivos);
+                    $stmt_archivos->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $stmt_archivos->execute();
+                    $archivos = $stmt_archivos->fetchAll(PDO::FETCH_ASSOC);
+                    ?>
+                    <?php if (!empty($archivos)): ?>
+                        <div class="mb-3">
+                            <h4>Archivos Adjuntos Existentes</h4>
+                            <ul>
+                                <?php foreach ($archivos as $archivo): ?>
+                                    <li>
+                                        <a href="<?= htmlspecialchars('../' . $archivo['ruta_archivo']) ?>" target="_blank"><?= basename($archivo['ruta_archivo']) ?></a>
+                                        <label class="form-check-label text-danger ms-2">
+                                            <input type="checkbox" name="eliminar_archivos[]" value="<?= $archivo['id_archivo'] ?>"> Eliminar
+                                        </label>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+                    <div class="mb-3">
+                        <label for="archivos_adjuntos" class="form-label">Agregar Archivos Adjuntos</label>
+                        <input class="form-control" type="file" name="archivos_adjuntos[]" id="archivos_adjuntos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                    </div>
+
+                    <!-- Resumen de Costos -->
+                    <div class="mb-3">
+                        <label for="costo_total" class="form-label">Costo Total</label>
+                        <input type="text" class="form-control" id="costo_total" name="costo_total"
+                            value="<?= number_format((float)$costo_total_calculado, 2, ',', '.') ?>" readonly>
+                    </div>
 
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-success">Actualizar OT</button>
@@ -321,7 +353,9 @@ $costo_total_calculado = $total_productos + $total_servicios;
                     <?php endforeach; ?>
                 </select>
             </td>
-            <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
+            <td>
+                <button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button>
+            </td>
         `;
         serviciosLista.appendChild(row);
         actualizarCostoTotal();

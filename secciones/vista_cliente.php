@@ -1,7 +1,7 @@
-<?php 
+<?php
 session_start();
 require_once('../configuraciones/bd.php');
-include('../secciones/clientes.php'); 
+include('../secciones/clientes.php');
 include('../templates/header_cliente.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso('cliente');
@@ -18,8 +18,6 @@ $nro_contacto = $_SESSION['nro_contacto'] ?? '';
 <main>
     <div class="container mt-5">
         <h1 class="text-center">¡Bienvenido, <?= htmlspecialchars($nombre_cliente); ?>!</h1>
-        <p class="text-center">Tu cuenta se ha creado exitosamente.</p>
-
         <div class="card mt-4">
             <div class="card-header">
                 Mis Datos
@@ -33,9 +31,14 @@ $nro_contacto = $_SESSION['nro_contacto'] ?? '';
                 <li class="list-group-item"><strong>Contacto:</strong> <?= htmlspecialchars($nro_contacto); ?></li>
             </ul>
         </div>
-
-        <div class="text-center mt-4">
-            <a href="../index.php" class="btn btn-danger">Cerrar Sesión</a>
+        <div class="mt-4 text-center">
+        <td>
+            <form action="editar_cuenta.php" method="get">
+                <input type="hidden" name="id_cliente" value="<?php echo $cliente['id_cliente']; ?>">
+                    <button type="submit" class="btn btn-info">Editar</button>
+                    <a href="../index.php" class="btn btn-danger">Cerrar Sesión</a>
+            </form>
+        </td>
         </div>
     </div>
 </main>

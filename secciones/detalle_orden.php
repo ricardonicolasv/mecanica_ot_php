@@ -2,8 +2,8 @@
 date_default_timezone_set('America/Santiago');
 session_start();
 include('../configuraciones/bd.php');
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
@@ -158,7 +158,6 @@ $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
 
             <p><strong>Costo Final:</strong> <?= '$' . number_format($orden['costo_total'], 0, ',', '.') ?></p>
 
-            <!-- Archivos adjuntos -->
             <?php if (!empty($archivos)): ?>
                 <h5 class="mt-4">Archivos Adjuntos</h5>
                 <ul>

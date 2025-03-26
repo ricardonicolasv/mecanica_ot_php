@@ -63,6 +63,24 @@ if ($accion != '') {
             header("Location: lista_clientes.php");
             exit();
             break;
+        case 'editar_cliente':
+            $sql = "UPDATE Clientes SET 
+                            nombre_cliente=:nombre_cliente, apellido_cliente=:apellido_cliente, email=:email, 
+                            password=:password, rut=:rut, direccion=:direccion, nro_contacto=:nro_contacto 
+                        WHERE id_cliente=:id_cliente";
+            $consulta = $conexionBD->prepare($sql);
+            $consulta->bindParam(':id_cliente', $id_cliente);
+            $consulta->bindParam(':nombre_cliente', $nombre_cliente);
+            $consulta->bindParam(':apellido_cliente', $apellido_cliente);
+            $consulta->bindParam(':email', $email);
+            $consulta->bindParam(':password', password_hash($password, PASSWORD_DEFAULT));
+            $consulta->bindParam(':rut', $rut);
+            $consulta->bindParam(':direccion', $direccion);
+            $consulta->bindParam(':nro_contacto', $nro_contacto);
+            $consulta->execute();
+            header("Location: vista_clientes.php");
+            exit();
+            break;
 
         case 'eliminar':
             $sql = "DELETE FROM Clientes WHERE id_cliente=:id_cliente";

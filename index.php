@@ -19,7 +19,9 @@
                 <div class="col-12">
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
                         <div class="container-fluid">
-                            <a class="navbar-brand" href="#">Mecanica Industrial</a>
+                            <a class="navbar-brand" href="index.php">
+                                <img src="../app/secciones/img/logo.png" alt="Logo" style="height: 60px;">
+                            </a>
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                                 data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
                                 aria-label="Toggle navigation">
@@ -58,59 +60,22 @@
     <main>
         <section class="intro">
             <h2 class="text-center">Conoce Nuestros Servicios</h2>
-            <p>Ofrecemos soluciones especializadas en mecánica industrial, mantenimiento, reparación y fabricación de piezas de alta precisión.</p>
+            <p class="text-center">Ofrecemos soluciones especializadas en mecánica industrial, mantenimiento, reparación y fabricación de piezas de alta precisión.</p>
         </section>
-        <section class="galeria">
+        <section class="galeria text-center">
             <div class="imagen">
-                <img src="imagenes/taller.jpg" alt="Taller de mecánica industrial">
+                <img src="../app/secciones/img/taller_mecanico.png" alt="Taller de mecánica industrial" style="height: 200px;">
                 <p>Taller especializado</p>
             </div>
             <div class="imagen">
-                <img src="imagenes/maquinaria.jpg" alt="Maquinaria de precisión">
+                <img src="../app/secciones/img/maquinaria.jpg" alt="Maquinaria de precisión" style="height: 200px;">
                 <p>Maquinaria de alta precisión</p>
             </div>
             <div class="imagen">
-                <img src="imagenes/operario.jpg" alt="Operario trabajando">
+                <img src="../app/secciones/img/operario.jpg" alt="Operario trabajando" style="height: 200px;">
                 <p>Profesionales calificados</p>
             </div>
         </section>
     </main>
 
-    <footer>
-        <div class="container-fluid bg-light text-dark fixed-bottom">
-            <div class="row bg-secondary text-white p-3">
-                <div class="col-12">
-                    <p class="text-center">Mecanica Industrial</p>
-                </div>
-                <div class="col-12 col-md-4 d-flex flex-column align-items-center">
-                    <h5>Contacto</h5>
-                    <p>Email: contacto@mecanicaindustrial.com</p>
-                    <p>Teléfono: +123 456 7890</p>
-                </div>
-                <div class="col-12 col-md-4 d-flex flex-column align-items-center">
-                    <h5>Información</h5>
-                    <p>Dirección: Calle Falsa 123, Ciudad, País</p>
-                    <p>Horario: Lunes a Viernes, 9:00 - 18:00</p>
-                </div>
-                <div class="col-12 col-md-4 d-flex flex-column align-items-center">
-                    <h5>Links de Interés</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">Política de Privacidad</a></li>
-                        <li><a href="#" class="text-white">Términos y Condiciones</a></li>
-                        <li><a href="#" class="text-white">Soporte</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <!-- Bootstrap JavaScript Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
-        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
-        crossorigin="anonymous"></script>
-</body>
-
-</html>
+    <?php include('../app/templates/footer.php'); ?>
