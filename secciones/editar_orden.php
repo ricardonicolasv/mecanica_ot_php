@@ -94,7 +94,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
                     <h4>Información del Cliente</h4>
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
-                        <select class="form-select" id="id_cliente" name="id_cliente" required onchange="actualizarDatosCliente()">
+                        <select class="form-select select2" id="id_cliente" name="id_cliente" required>
                             <option value="" disabled>Seleccione un Cliente</option>
                             <?php foreach ($clientes as $cliente): ?>
                                 <option value="<?= $cliente['id_cliente'] ?>"
@@ -119,7 +119,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
                     <h4>Datos de la Orden</h4>
                     <div class="mb-3">
                         <label for="id_responsable" class="form-label">Responsable</label>
-                        <select class="form-select" id="id_responsable" name="id_responsable" required>
+                        <select class="form-select select2" id="id_responsable" name="id_responsable" required>
                             <option value="" disabled>Seleccione un Responsable</option>
                             <?php foreach ($responsables as $responsable): ?>
                                 <option value="<?= $responsable['id_usuario'] ?>"
@@ -217,7 +217,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
                                     <tr>
                                         <td>
                                             <input type="hidden" name="id_detalle[]" value="<?= htmlspecialchars($producto['id_detalle']) ?>">
-                                            <select class="form-select" name="id_producto[]" onchange="actualizarCostoTotal()">
+                                            <select class="form-select select2" name="id_producto[]" onchange="actualizarCostoTotal()">
                                                 <option value="" disabled>Seleccione un Producto</option>
                                                 <?php
                                                 $consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
@@ -276,7 +276,8 @@ $costo_total_calculado = $total_productos + $total_servicios;
                     <div class="mb-3">
                         <label for="costo_total" class="form-label">Costo Total</label>
                         <input type="text" class="form-control" id="costo_total" name="costo_total"
-                            value="<?= number_format((float)$costo_total_calculado, 2, ',', '.') ?>" readonly>
+                            value="<?= '$' . number_format(round($costo_total_calculado), 0, ',', '.') ?>" readonly>
+
                     </div>
 
                     <div class="d-flex justify-content-between mt-3">
@@ -290,6 +291,54 @@ $costo_total_calculado = $total_productos + $total_servicios;
 </main>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Mostrar info del cliente seleccionado
+        function actualizarDatosCliente() {
+            const cliente = document.querySelector("#id_cliente option:checked");
+            document.getElementById("cliente_email").value = cliente?.dataset.email || '';
+            document.getElementById("cliente_contacto").value = cliente?.dataset.contacto || '';
+        }
+
+        // Select2 Cliente con botón de crear si no hay resultados
+        $(document).ready(function() {
+            $('#id_cliente').select2({
+                width: '100%',
+                placeholder: 'Seleccione un Cliente',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return `
+                    <div class="text-center">
+                        Cliente no encontrado.<br>
+                        <a href="crear_clientes.php" class="btn btn-sm btn-outline-primary mt-2">
+                            ➕ Crear nuevo cliente
+                        </a>
+                    </div>
+                `;
+                    }
+                },
+                escapeMarkup: function(markup) {
+                    return markup;
+                }
+            });
+        }).on('select2:select select2:clear', actualizarDatosCliente);
+
+        // Select2 para otros campos
+        $('.select2').not('#id_cliente').select2({
+            width: '100%',
+            placeholder: 'Seleccione una opción',
+            allowClear: true
+        });
+
+        // Enfocar automáticamente el input del select2 al abrir
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field')?.focus();
+        });
+
+        // Inicializar datos al cargar
+        actualizarDatosCliente();
+    });
+
     function actualizarDatosCliente() {
         let select = document.getElementById("id_cliente");
         let emailInput = document.getElementById("cliente_email");
@@ -307,30 +356,29 @@ $costo_total_calculado = $total_productos + $total_servicios;
         let productosLista = document.getElementById("productos_lista");
         let row = document.createElement("tr");
         row.innerHTML = `
-            <td>
-                <select class="form-select" name="id_producto[]" onchange="actualizarCostoTotal()">
-                    <option value="" disabled selected>Seleccione un Producto</option>
-                    <?php
-                    $consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
-                    $todosLosProductos = $consultaTodosProductos->fetchAll(PDO::FETCH_ASSOC);
-                    foreach ($todosLosProductos as $prod): ?>
-                        <option value="<?= htmlspecialchars($prod['id_producto']) ?>"
-                            data-costo="<?= htmlspecialchars($prod['costo_unitario']) ?>">
-                            <?= htmlspecialchars($prod['marca'] . ' ' . $prod['modelo']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td>
-                <input type="number" class="form-control" name="cantidad[]" min="1" value="1" onchange="actualizarCostoTotal()">
-            </td>
-            <td>
-                <button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button>
-            </td>
-        `;
+        <td>
+            <select class="form-select select2" name="id_producto[]" onchange="actualizarCostoTotal()">
+                <option value="" disabled selected>Seleccione un Producto</option>
+                <?php foreach ($todosLosProductos as $prod): ?>
+                    <option value="<?= $prod['id_producto'] ?>" data-costo="<?= $prod['costo_unitario'] ?>">
+                        <?= $prod['marca'] . ' ' . $prod['modelo'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td><input type="number" class="form-control" name="cantidad[]" value="1" min="1" onchange="actualizarCostoTotal()"></td>
+        <td><button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button></td>
+    `;
         productosLista.appendChild(row);
-        actualizarCostoTotal();
+
+        // Activar Select2 en el nuevo elemento
+        $(row).find('.select2').select2({
+            width: '100%',
+            placeholder: 'Seleccione un Producto',
+            allowClear: true
+        });
     }
+
 
     function eliminarProducto(button) {
         let row = button.closest("tr");
@@ -385,20 +433,8 @@ $costo_total_calculado = $total_productos + $total_servicios;
         });
 
         let costoTotal = totalProductos + totalServicios;
-        document.getElementById("costo_total").value = costoTotal.toFixed(2);
+        document.getElementById("costo_total").value = "$" + Math.round(costoTotal).toLocaleString("es-CL");
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        actualizarDatosCliente();
-        document.getElementById("id_estado").addEventListener("change", actualizarCostoTotal);
-        document.querySelectorAll("select[name='id_producto[]'], input[name='cantidad[]']").forEach(el => {
-            el.addEventListener("change", actualizarCostoTotal);
-        });
-        document.querySelectorAll("select[name='id_servicio[]']").forEach(el => {
-            el.addEventListener("change", actualizarCostoTotal);
-        });
-        actualizarCostoTotal();
-    });
 </script>
 
 <?php include('../templates/footer.php'); ?>

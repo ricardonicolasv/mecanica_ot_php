@@ -8,25 +8,31 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 
 $conexionBD = BD::crearInstancia();
 
-// Obtener lista de clientes
+// Obtener datos desde BD
 $consultaClientes = $conexionBD->prepare("SELECT id_cliente, nombre_cliente, email, nro_contacto FROM Clientes");
 $consultaClientes->execute();
 $clientes = $consultaClientes->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener lista de usuarios responsables
 $consultaUsuarios = $conexionBD->prepare("SELECT id_usuario, nombre FROM Usuarios");
 $consultaUsuarios->execute();
 $usuarios = $consultaUsuarios->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener lista de estados de OT
 $consultaEstados = $conexionBD->prepare("SELECT id_estado, nombre_estado FROM Estado_OT");
 $consultaEstados->execute();
 $estados = $consultaEstados->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener lista de tipos de trabajo y servicios
 $consultaServicios = $conexionBD->prepare("SELECT id_servicio, nombre_servicio, COALESCE(costo_servicio,0) AS costo_servicio FROM Servicios");
 $consultaServicios->execute();
 $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
+
+// Consultar productos una vez para reutilizar
+$consultaProductos = $conexionBD->prepare("SELECT p.id_producto, p.marca, p.modelo, p.costo_unitario,
+    COALESCE(SUM(i.cantidad), 0) AS stock_disponible 
+    FROM Productos p 
+    LEFT JOIN Inventario i ON p.id_producto = i.id_producto 
+    GROUP BY p.id_producto, p.marca, p.modelo, p.costo_unitario");
+$consultaProductos->execute();
+$listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <main>
@@ -35,25 +41,29 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-8">
                 <h1 class="text-center">Crear Orden de Trabajo</h1>
                 <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
-                    <!-- Enviar acción 'agregar' para crear la orden -->
                     <input type="hidden" name="accion" value="agregar">
 
                     <!-- Cliente -->
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
-                        <select class="form-select" id="id_cliente" name="id_cliente" required onchange="actualizarDatosCliente()">
+                        <select class="form-select select2" id="id_cliente" name="id_cliente" required onchange="actualizarDatosCliente()">
                             <option value="" selected disabled>Seleccione un Cliente</option>
                             <?php foreach ($clientes as $cliente): ?>
-                                <option value="<?= $cliente['id_cliente'] ?>"
-                                    data-email="<?= $cliente['email'] ?>"
-                                    data-contacto="<?= $cliente['nro_contacto'] ?>">
+                                <option value="<?= $cliente['id_cliente'] ?>" data-email="<?= $cliente['email'] ?>" data-contacto="<?= $cliente['nro_contacto'] ?>">
                                     <?= $cliente['nombre_cliente'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
+
+                        <!-- Botón para crear cliente -->
+                        <div class="mt-2" id="btn_crear_cliente" style="display: none;">
+                            <a href="crear_clientes.php" class="btn btn-outline-primary btn-sm">➕ Crear nuevo cliente</a>
+                        </div>
+
                     </div>
 
-                    <!-- Información del Cliente -->
+
+                    <!-- Info cliente -->
                     <div class="mb-3">
                         <label class="form-label">Correo Electrónico:</label>
                         <input type="text" id="cliente_email" class="form-control" readonly>
@@ -66,7 +76,7 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
                     <!-- Responsable -->
                     <div class="mb-3">
                         <label for="id_responsable" class="form-label">Responsable</label>
-                        <select class="form-select" id="id_responsable" name="id_responsable" required>
+                        <select class="form-select select2" id="id_responsable" name="id_responsable" required>
                             <option value="" selected disabled>Seleccione un Responsable</option>
                             <?php foreach ($usuarios as $usuario): ?>
                                 <option value="<?= $usuario['id_usuario'] ?>"><?= $usuario['nombre'] ?></option>
@@ -85,7 +95,7 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
                         </select>
                     </div>
 
-                    <!-- Sección de Tipos de Trabajo -->
+                    <!-- Tipos de Trabajo -->
                     <h4>Tipos de Trabajo</h4>
                     <table class="table">
                         <thead>
@@ -100,56 +110,52 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
                                     <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
                                         <option value="" disabled selected>Seleccione un Tipo de Trabajo</option>
                                         <?php foreach ($servicios as $servicio): ?>
-                                            <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>" data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>">
-                                                <?= htmlspecialchars($servicio['nombre_servicio']) ?>
+                                            <option value="<?= $servicio['id_servicio'] ?>" data-costo="<?= $servicio['costo_servicio'] ?>">
+                                                <?= $servicio['nombre_servicio'] ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button>
-                                </td>
+                                <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
                             </tr>
                         </tbody>
                     </table>
                     <button type="button" class="btn btn-success" onclick="agregarServicio()">Agregar Tipo de Trabajo</button>
 
-                    <!-- Sección de Productos Asociados -->
+                    <!-- Productos -->
                     <h4 class="mt-4">Productos Asociados</h4>
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th>Stock Disponible</th>
+                                <th>Stock</th>
                                 <th>Cantidad</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
-                        <tbody id="productos_lista">
-                            <!-- Se agregarán dinámicamente -->
-                        </tbody>
+                        <tbody id="productos_lista"></tbody>
                     </table>
                     <button type="button" class="btn btn-success" onclick="agregarProducto()">Agregar Producto</button>
 
-                    <!-- Costo Total (calculado en base a productos y servicios) -->
+                    <!-- Costo Total -->
                     <div class="mb-3 mt-3">
                         <label for="costo_total" class="form-label">Costo Total</label>
                         <input type="text" class="form-control" id="costo_total" name="costo_total" readonly>
                     </div>
 
-                    <!-- Descripción de la OT -->
+                    <!-- Descripción -->
                     <div class="mb-3">
                         <label for="descripcion_actividad" class="form-label">Descripción de la Orden</label>
                         <textarea class="form-control" id="descripcion_actividad" name="descripcion_actividad" rows="3" required></textarea>
                     </div>
 
-                    <!-- Archivo Adjunto -->
+                    <!-- Archivos -->
                     <div class="mb-3">
                         <label for="archivo_adjunto" class="form-label">Archivos Adjuntos</label>
                         <input class="form-control" type="file" name="archivos_adjuntos[]" id="archivo_adjunto" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
                     </div>
 
-
+                    <!-- Botones -->
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Crear Orden</button>
                         <a href="lista_ordenes.php" class="btn btn-warning">Cancelar</a>
@@ -161,121 +167,149 @@ $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </main>
 
-<!-- JavaScript -->
 <script>
-    function actualizarDatosCliente() {
-        let select = document.getElementById("id_cliente");
-        let emailInput = document.getElementById("cliente_email");
-        let contactoInput = document.getElementById("cliente_contacto");
-
-        let selectedOption = select.options[select.selectedIndex];
-        if (selectedOption) {
-            emailInput.value = selectedOption.getAttribute("data-email") || "";
-            contactoInput.value = selectedOption.getAttribute("data-contacto") || "";
-        }
-    }
-
-    // Funciones para agregar/quitar Productos
-    function agregarProducto() {
-        let productosLista = document.getElementById("productos_lista");
-        let row = document.createElement("tr");
-        row.innerHTML = `
-            <td>
-                <select class="form-select" name="productos[]" onchange="actualizarStock(this)">
-                    <option value="" selected disabled>Seleccione un Producto</option>
-                    <?php
-                    $consultaProductos = $conexionBD->prepare("SELECT p.id_producto, p.marca, p.modelo, p.costo_unitario,
-                        COALESCE(SUM(i.cantidad), 0) AS stock_disponible 
-                        FROM Productos p 
-                        LEFT JOIN Inventario i ON p.id_producto = i.id_producto 
-                        GROUP BY p.id_producto, p.marca, p.modelo, p.costo_unitario");
-                    $consultaProductos->execute();
-                    $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
-                    foreach ($listaProductos as $producto) {
-                        echo '<option value="' . $producto['id_producto'] . '" data-stock="' . $producto['stock_disponible'] . '" data-costo="' . $producto['costo_unitario'] . '">'
-                            . $producto['marca'] . ' ' . $producto['modelo'] . '</option>';
-                    }
-                    ?>
-                </select>
-            </td>
-            <td><input type="text" class="form-control" name="stock_disponible[]" readonly></td>
-            <td><input type="number" class="form-control" name="cantidades[]" min="1" value="1" required></td>
-            <td><button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button></td>
-        `;
-        productosLista.appendChild(row);
-        actualizarCostoTotal();
-    }
-
-    function actualizarStock(select) {
-        let stockInput = select.parentElement.nextElementSibling.children[0];
-        let stock = select.options[select.selectedIndex].getAttribute("data-stock");
-        stockInput.value = stock;
-    }
-
-    function eliminarProducto(button) {
-        let row = button.closest("tr");
-        row.remove();
-        actualizarCostoTotal();
-    }
-
-    // Funciones para agregar/quitar Servicios (Tipos de Trabajo)
-    function agregarServicio() {
-        let serviciosLista = document.getElementById("servicios_lista");
-        let row = document.createElement("tr");
-        row.innerHTML = `
-            <td>
-                <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
-                    <option value="" disabled selected>Seleccione un Tipo de Trabajo</option>
-                    <?php foreach ($servicios as $servicio): ?>
-                        <option value="<?= htmlspecialchars($servicio['id_servicio']) ?>" data-costo="<?= htmlspecialchars($servicio['costo_servicio']) ?>">
-                            <?= htmlspecialchars($servicio['nombre_servicio']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </td>
-            <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
-        `;
-        serviciosLista.appendChild(row);
-        actualizarCostoTotal();
-    }
-
-    function eliminarServicio(button) {
-        let row = button.closest("tr");
-        row.remove();
-        actualizarCostoTotal();
-    }
-
-    // Función para actualizar el costo total (productos + servicios)
-    function actualizarCostoTotal() {
-        let totalProductos = 0;
-        document.querySelectorAll("tbody#productos_lista tr").forEach(row => {
-            let cantidad = parseFloat(row.querySelector("input[name='cantidades[]']").value) || 0;
-            let selectProducto = row.querySelector("select[name='productos[]']");
-            let costoUnitario = parseFloat(selectProducto.selectedOptions[0]?.getAttribute("data-costo")) || 0;
-            totalProductos += cantidad * costoUnitario;
-        });
-
-        let totalServicios = 0;
-        document.querySelectorAll("tbody#servicios_lista tr").forEach(row => {
-            let selectServicio = row.querySelector("select[name='id_servicio[]']");
-            let costoServicio = parseFloat(selectServicio.selectedOptions[0]?.getAttribute("data-costo")) || 0;
-            totalServicios += costoServicio;
-        });
-
-        let costoTotal = totalProductos + totalServicios;
-        document.getElementById("costo_total").value = "$" + Math.round(costoTotal).toLocaleString('es-CL');
-    }
-
     document.addEventListener("DOMContentLoaded", function() {
+        // Inicializar Select2 en todos los .select2 excepto #id_cliente
+        $('.select2').not('#id_cliente').select2({
+            width: '100%',
+            placeholder: 'Seleccione una opción',
+            allowClear: true
+        });
+        // Activar foco automático al abrir cualquier Select2
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-container--open .select2-search__field')?.focus();
+        });
+
+
+        // Inicializar Select2 en el campo de cliente
+        $('#id_cliente').select2({
+                width: '100%',
+                placeholder: 'Seleccione un Cliente',
+                allowClear: true,
+                language: {
+                    noResults: function() {
+                        return `
+                <div class="text-center">
+                    Cliente no encontrado.<br>
+                    <a href="crear_clientes.php" class="btn btn-sm btn-outline-primary mt-2">
+                        ➕ Crear nuevo cliente
+                    </a>
+                </div>
+            `;
+                    }
+                },
+                escapeMarkup: function(markup) {
+                    return markup; // Permitir HTML en noResults
+                }
+            })
+            .on('select2:select', function() {
+                actualizarDatosCliente();
+            })
+            .on('select2:clear', function() {
+                actualizarDatosCliente();
+            });
+
+
+
+        // Mostrar info del cliente seleccionado
+        window.actualizarDatosCliente = function() {
+            const cliente = document.querySelector("#id_cliente option:checked");
+            document.getElementById("cliente_email").value = cliente?.dataset.email || '';
+            document.getElementById("cliente_contacto").value = cliente?.dataset.contacto || '';
+        };
+
+        // Agregar producto
+        window.agregarProducto = function() {
+            const productosLista = document.getElementById("productos_lista");
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+        <td>
+            <select class="form-select select2" name="productos[]" onchange="actualizarStock(this); actualizarCostoTotal()">
+                <option value="" selected disabled>Seleccione un Producto</option>
+                <?php foreach ($listaProductos as $producto): ?>
+                    <option value="<?= $producto['id_producto'] ?>" data-stock="<?= $producto['stock_disponible'] ?>" data-costo="<?= $producto['costo_unitario'] ?>">
+                        <?= $producto['marca'] . ' ' . $producto['modelo'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td><input type="text" class="form-control" name="stock_disponible[]" readonly></td>
+        <td><input type="number" class="form-control" name="cantidades[]" min="1" value="1" required oninput="actualizarCostoTotal()"></td>
+        <td><button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button></td>
+    `;
+
+            productosLista.appendChild(row);
+
+            // Activar Select2 en el nuevo select
+            $(row).find('.select2').select2({
+                width: '100%',
+                placeholder: 'Seleccione un Producto',
+                allowClear: true
+            });
+
+            // Enfocar automáticamente el campo de búsqueda del select agregado
+            $(row).find('.select2').on('select2:open', () => {
+                document.querySelector('.select2-container--open .select2-search__field')?.focus();
+            });
+
+            actualizarCostoTotal();
+        };
+
+
+        window.actualizarStock = function(select) {
+            const stock = select.options[select.selectedIndex].dataset.stock || '';
+            select.closest('tr').querySelector("input[name='stock_disponible[]']").value = stock;
+        };
+
+        window.eliminarProducto = function(btn) {
+            btn.closest("tr").remove();
+            actualizarCostoTotal();
+        };
+
+        window.agregarServicio = function() {
+            const serviciosLista = document.getElementById("servicios_lista");
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>
+                    <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
+                        <option value="" disabled selected>Seleccione un Tipo de Trabajo</option>
+                        <?php foreach ($servicios as $servicio): ?>
+                            <option value="<?= $servicio['id_servicio'] ?>" data-costo="<?= $servicio['costo_servicio'] ?>">
+                                <?= $servicio['nombre_servicio'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td><button type="button" class="btn btn-danger" onclick="eliminarServicio(this)">Eliminar</button></td>
+            `;
+            serviciosLista.appendChild(row);
+        };
+
+        window.eliminarServicio = function(btn) {
+            btn.closest("tr").remove();
+            actualizarCostoTotal();
+        };
+
+        window.actualizarCostoTotal = function() {
+            let total = 0;
+
+            document.querySelectorAll("select[name='productos[]']").forEach((select, i) => {
+                const costo = parseFloat(select.options[select.selectedIndex]?.dataset.costo || 0);
+                const cantidad = parseFloat(document.querySelectorAll("input[name='cantidades[]']")[i]?.value || 0);
+                total += costo * cantidad;
+            });
+
+            document.querySelectorAll("select[name='id_servicio[]']").forEach(select => {
+                total += parseFloat(select.options[select.selectedIndex]?.dataset.costo || 0);
+            });
+
+            document.getElementById("costo_total").value = "$" + Math.round(total).toLocaleString("es-CL");
+        };
+
+        // Inicialización automática
         actualizarDatosCliente();
-        document.getElementById("id_estado").addEventListener("change", actualizarCostoTotal);
-        // Agregar eventos para recalcular costo al cambiar productos y servicios
-        document.querySelectorAll("select[name='productos[]'], input[name='cantidades[]']").forEach(el => {
-            el.addEventListener("change", actualizarCostoTotal);
-        });
-        document.querySelectorAll("select[name='id_servicio[]']").forEach(el => {
-            el.addEventListener("change", actualizarCostoTotal);
-        });
         actualizarCostoTotal();
     });
 </script>

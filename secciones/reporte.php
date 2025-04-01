@@ -288,7 +288,8 @@ if (!empty($productos)) {
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(50, 8, decodificar("Costo Final: "), 0, 0);
 $pdf->SetFont('Arial', '', 12);
-$pdf->Cell(50, 8, decodificar('$' . number_format($orden['costo_total'], 0, ',', '.')), 0, 1);
+$costo_total = is_numeric($orden['costo_total']) ? $orden['costo_total'] : str_replace(['$', '.', ','], '', $orden['costo_total']);
+$pdf->Cell(50, 8, decodificar('$' . number_format((float)$costo_total, 0, ',', '.')), 0, 1);
 $pdf->Ln(5);
 
 // HISTORIAL DE CAMBIOS
@@ -365,9 +366,12 @@ if (!empty($historial)) {
                 $desc = "Cantidad de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];
                 break;
             case 'Costo Total':
-                // Formatear el costo sin decimales y con el símbolo de pesos chilenos
-                $desc = "Costo Total de $" . number_format($registro['valor_anterior'], 0, ',', '.')
-                    . " a $" . number_format($registro['valor_nuevo'], 0, ',', '.');
+                // Limpia los valores antes de formatearlos
+                $valorAnteriorNum = (float) str_replace(['$', '.', ','], '', $registro['valor_anterior']);
+                $valorNuevoNum = (float) str_replace(['$', '.', ','], '', $registro['valor_nuevo']);
+
+                $desc = "Costo Total de $" . number_format($valorAnteriorNum, 0, ',', '.')
+                    . " a $" . number_format($valorNuevoNum, 0, ',', '.');
                 break;
             case 'Descripción':
                 $desc = "Descripción de " . $registro['valor_anterior'] . " a " . $registro['valor_nuevo'];

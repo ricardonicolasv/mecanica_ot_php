@@ -112,7 +112,6 @@ include('../templates/header_cliente.php');
             <p><strong>Email Cliente:</strong> <?= $orden['cliente_email'] ?></p>
             <p><strong>Contacto:</strong> <?= $orden['cliente_contacto'] ?></p>
             <p><strong>Descripción:</strong> <?= !empty($orden['descripcion_actividad']) ? htmlspecialchars($orden['descripcion_actividad']) : 'No especificada' ?></p>
-            <p><strong>Costo Total:</strong> <?= '$' . number_format($orden['costo_total'], 0, ',', '.') ?></p>
 
             <?php if (!empty($servicios)): ?>
                 <h5 class="mt-4">Servicios Asociados</h5>
@@ -148,6 +147,7 @@ include('../templates/header_cliente.php');
                     </tbody>
                 </table>
             <?php endif; ?>
+            <p><strong>Costo Total:</strong> <?= '$' . number_format($orden['costo_total'], 0, ',', '.') ?></p>
 
             <?php if (!empty($archivos)): ?>
                 <h5 class="mt-4">Archivos Adjuntos</h5>
@@ -160,6 +160,7 @@ include('../templates/header_cliente.php');
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
+            
             <div>
                 <a href="lista_ordenes_cliente.php" class="btn btn-secondary mt-3">Volver</a>
                 <a href="reporte.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-primary mt-3">Reporte</a>

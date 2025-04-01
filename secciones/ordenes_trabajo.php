@@ -200,13 +200,48 @@ if ($accion != '') {
                     $consulta_productos_actuales->execute();
                     $productos_anteriores = $consulta_productos_actuales->fetchAll(PDO::FETCH_ASSOC);
 
-                    // Actualizar la OT (cliente, responsable, estado, costo total)
+                    // Recalcular costo_total desde el backend (productos + servicios)
+                    // Capturar valores del formulario
+                    $descripcion_actividad = $_POST['descripcion_actividad'] ?? '';
+                    $id_cliente = $_POST['id_cliente'] ?? null;
+                    $id_responsable = $_POST['id_responsable'] ?? null;
+                    $id_estado = $_POST['id_estado'] ?? null;
+                    $posted_productos  = $_POST['id_producto'] ?? [];
+                    $posted_detalles   = $_POST['id_detalle']  ?? [];
+                    $posted_cantidades = $_POST['cantidad']    ?? [];
+                    $id_servicios_post = $_POST['id_servicio'] ?? [];
+                    $id_servicio_ot_post = $_POST['id_servicio_ot'] ?? [];
+
+                    $costo_total = 0;
+
+                    // Calcular costo de productos
+                    foreach ($posted_productos as $i => $id_producto) {
+                        $cantidad = floatval($posted_cantidades[$i] ?? 0);
+                        $stmt = $conexionBD->prepare("SELECT COALESCE(costo_unitario, 0) FROM Productos WHERE id_producto = :id_producto");
+                        $stmt->bindParam(':id_producto', $id_producto, PDO::PARAM_INT);
+                        $stmt->execute();
+                        $costo_unitario = floatval($stmt->fetchColumn());
+                        $costo_total += $cantidad * $costo_unitario;
+                    }
+
+                    // Calcular costo de servicios
+                    foreach ($id_servicios_post as $id_servicio) {
+                        $stmt = $conexionBD->prepare("SELECT COALESCE(costo_servicio, 0) FROM Servicios WHERE id_servicio = :id_servicio");
+                        $stmt->bindParam(':id_servicio', $id_servicio, PDO::PARAM_INT);
+                        $stmt->execute();
+                        $costo_servicio = floatval($stmt->fetchColumn());
+                        $costo_total += $costo_servicio;
+                    }
+
+                    $costo_total = round($costo_total); // redondea a entero
+
+                    // Ahora ejecutar UPDATE
                     $sql_ot = "UPDATE OT SET 
-                                        id_cliente = :id_cliente, 
-                                        id_responsable = :id_responsable, 
-                                        id_estado = :id_estado, 
-                                        costo_total = :costo_total
-                                   WHERE id_ot = :id_ot";
+              id_cliente = :id_cliente, 
+              id_responsable = :id_responsable, 
+              id_estado = :id_estado, 
+              costo_total = :costo_total
+           WHERE id_ot = :id_ot";
                     $consulta_ot = $conexionBD->prepare($sql_ot);
                     $consulta_ot->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
                     $consulta_ot->bindParam(':id_cliente', $id_cliente, PDO::PARAM_INT);
@@ -214,6 +249,8 @@ if ($accion != '') {
                     $consulta_ot->bindParam(':id_estado', $id_estado, PDO::PARAM_INT);
                     $consulta_ot->bindParam(':costo_total', $costo_total, PDO::PARAM_STR);
                     $consulta_ot->execute();
+
+
 
                     // Actualizar la Descripción en Detalle_OT usando el valor capturado en $descripcion_actividad
                     $sql_check_detalle = "SELECT COUNT(*) FROM Detalle_OT WHERE id_ot = :id_ot AND id_producto IS NULL";
