@@ -87,26 +87,52 @@ include('../templates/vista_admin.php');
         <div class="row justify-content-center">
             <div class="col-6">
                 <h1 class="text-center">Editar Usuario</h1>
-                <form action="" method="post">
+                <form id="formEditarCliente" action="" method="post">
                     <input type="hidden" name="id_usuario" value="<?php echo $id_usuario; ?>">
-
+                    <!-- Campo Nombre -->
                     <div class="mb-3">
                         <label for="nombre" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="<?php echo $nombre; ?>" required>
+                        <input type="text"
+                            class="form-control"
+                            id="nombre"
+                            name="nombre"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            required
+                            value="<?php echo htmlspecialchars($nombre); ?>">
                     </div>
+                    <!-- Campo Apellido -->
                     <div class="mb-3">
                         <label for="apellido" class="form-label">Apellido</label>
-                        <input type="text" class="form-control" id="apellido" name="apellido" value="<?php echo $apellido; ?>" required>
+                        <input type="text"
+                            class="form-control"
+                            id="apellido"
+                            name="apellido"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            required
+                            value="<?php echo htmlspecialchars($apellido); ?>">
                     </div>
+                    <!-- Campo Email -->
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo $email; ?>" required>
+                        <input type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            required
+                            value="<?php echo htmlspecialchars($email); ?>">
+                        <small id="emailFeedback" class="form-text"></small>
                     </div>
+
+                    <!-- Campo Contraseña -->
                     <div class="mb-3">
                         <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
                         <input type="password" class="form-control" id="password" name="password">
                     </div>
-
+                    <!-- Campo RUT -->
                     <div class="mb-3">
                         <label for="rol" class="form-label">Rol</label>
                         <select class="form-select" id="rol" name="rol" required>
@@ -115,7 +141,7 @@ include('../templates/vista_admin.php');
                             <option value="tecnico" <?php echo ($rol == 'tecnico') ? 'selected' : ''; ?>>Técnico</option>
                         </select>
                     </div>
-
+                    <!-- Botones de acción -->
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" name="editar" value="editar" class="btn btn-success">Actualizar Usuario</button>
                         <button type="submit" name="borrar" value="borrar" class="btn btn-danger">Borrar Usuario</button>
@@ -126,4 +152,42 @@ include('../templates/vista_admin.php');
         </div>
     </div>
 </main>
+<!-- jQuery (si no está cargado aún) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script>
+    // Validación de email
+    const validateEmail = (email) => {
+        return email.match(
+            /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+    };
+
+    const validate = () => {
+        const $feedback = $('#emailFeedback');
+        const email = $('#email').val();
+        $feedback.text('');
+
+        if (validateEmail(email)) {
+            $feedback.text('"' + email + '" Email válido ✅');
+            $feedback.css('color', 'green');
+            return true;
+        } else {
+            $feedback.text('"' + email + '" Email inválido ❌');
+            $feedback.css('color', 'red');
+            return false;
+        }
+    };
+
+    $('#email').on('input', validate);
+
+    // Validación al enviar el formulario
+    $('#formEditarCliente').on('submit', function(e) {
+        if (!validate()) {
+            e.preventDefault();
+            alert("Por favor, ingresa un email válido antes de guardar.");
+        }
+    });
+</script>
+
 <?php include('../templates/footer.php'); ?>

@@ -31,19 +31,42 @@ if ($accion != '') {
             break;
         case 'agregar_cliente':
             $sql = "INSERT INTO Clientes (nombre_cliente, apellido_cliente, email, password, rut, direccion, nro_contacto, rol) 
-        VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto, 'cliente')";
+                        VALUES (:nombre_cliente, :apellido_cliente, :email, :password, :rut, :direccion, :nro_contacto, 'cliente')";
             $consulta = $conexionBD->prepare($sql);
             $consulta->bindParam(':nombre_cliente', $nombre_cliente);
             $consulta->bindParam(':apellido_cliente', $apellido_cliente);
             $consulta->bindParam(':email', $email);
-            $consulta->bindParam(':password', password_hash($password, PASSWORD_DEFAULT)); // Encriptación de contraseña
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $consulta->bindParam(':password', $hashed_password);
             $consulta->bindParam(':rut', $rut);
             $consulta->bindParam(':direccion', $direccion);
             $consulta->bindParam(':nro_contacto', $nro_contacto);
             $consulta->execute();
+
+            // Obtener el ID del cliente recién creado
+            $id_cliente = $conexionBD->lastInsertId();
+
+            // Obtener los datos del cliente recién creado
+            $sqlCliente = "SELECT * FROM Clientes WHERE id_cliente = :id_cliente";
+            $consultaCliente = $conexionBD->prepare($sqlCliente);
+            $consultaCliente->bindParam(':id_cliente', $id_cliente);
+            $consultaCliente->execute();
+            $cliente = $consultaCliente->fetch(PDO::FETCH_ASSOC);
+
+            // Iniciar sesión automáticamente con el nuevo cliente
+            session_start();
+            $_SESSION['id_cliente'] = $cliente['id_cliente'];
+            $_SESSION['nombre'] = $cliente['nombre_cliente'];
+            $_SESSION['apellido'] = $cliente['apellido_cliente'];
+            $_SESSION['email'] = $cliente['email'];
+            $_SESSION['rut'] = $cliente['rut'];
+            $_SESSION['direccion'] = $cliente['direccion'];
+            $_SESSION['nro_contacto'] = $cliente['nro_contacto'];
+            $_SESSION['rol'] = $cliente['rol'];
+
             header("Location: vista_cliente.php");
             exit();
-            break;
+
 
         case 'editar':
             $sql = "UPDATE Clientes SET 

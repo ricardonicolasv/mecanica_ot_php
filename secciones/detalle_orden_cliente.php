@@ -64,7 +64,7 @@ $consulta_servicios->execute();
 $servicios = $consulta_servicios->fetchAll(PDO::FETCH_ASSOC);
 
 // Archivos adjuntos
-$sql_archivos = "SELECT * FROM ArchivosAdjuntos_OT WHERE id_ot = :id_ot";
+$sql_archivos = "SELECT id_archivo, ruta_archivo, tipo_archivo, nombre_original FROM ArchivosAdjuntos_OT WHERE id_ot = :id_ot";
 $consulta_archivos = $conexionBD->prepare($sql_archivos);
 $consulta_archivos->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
 $consulta_archivos->execute();
@@ -154,13 +154,15 @@ include('../templates/header_cliente.php');
                 <ul>
                     <?php foreach ($archivos as $archivo): ?>
                         <li>
-                            <a href="<?= $archivo['ruta_archivo'] ?>" target="_blank"><?= basename($archivo['ruta_archivo']) ?></a>
+                            <a href="../<?= htmlspecialchars($archivo['ruta_archivo']) ?>" target="_blank">
+                                <?= htmlspecialchars($archivo['nombre_original']) ?>
+                            </a>
+
                             (<?= htmlspecialchars($archivo['tipo_archivo']) ?>)
                         </li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
-            
             <div>
                 <a href="lista_ordenes_cliente.php" class="btn btn-secondary mt-3">Volver</a>
                 <a href="reporte.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-primary mt-3">Reporte</a>

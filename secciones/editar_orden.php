@@ -86,6 +86,17 @@ $costo_total_calculado = $total_productos + $total_servicios;
         <div class="row justify-content-center">
             <div class="col-8">
                 <h1 class="text-center">Editar Orden de Trabajo</h1>
+                <?php if (isset($_SESSION['error_archivo'])): ?>
+                    <div class="alert alert-danger" id="errorArchivo">
+                        <?= htmlspecialchars($_SESSION['error_archivo']) ?>
+                    </div>
+                    <script>
+                        document.getElementById("errorArchivo").scrollIntoView({
+                            behavior: "smooth"
+                        });
+                    </script>
+                    <?php unset($_SESSION['error_archivo']); ?>
+                <?php endif; ?>
                 <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="id_ot" value="<?= $id_ot; ?>">
                     <input type="hidden" name="accion" value="editar">
@@ -246,7 +257,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
 
                     <!-- Archivos Adjuntos -->
                     <?php
-                    $sql_archivos = "SELECT * FROM ArchivosAdjuntos_OT WHERE id_ot = :id_ot";
+                    $sql_archivos = "SELECT id_archivo, ruta_archivo, tipo_archivo, nombre_original FROM ArchivosAdjuntos_OT WHERE id_ot = :id_ot";
                     $stmt_archivos = $conexionBD->prepare($sql_archivos);
                     $stmt_archivos->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
                     $stmt_archivos->execute();
@@ -258,7 +269,9 @@ $costo_total_calculado = $total_productos + $total_servicios;
                             <ul>
                                 <?php foreach ($archivos as $archivo): ?>
                                     <li>
-                                        <a href="<?= htmlspecialchars('../' . $archivo['ruta_archivo']) ?>" target="_blank"><?= basename($archivo['ruta_archivo']) ?></a>
+                                        <a href="<?= htmlspecialchars('../' . $archivo['ruta_archivo']) ?>" target="_blank">
+                                            <?= htmlspecialchars($archivo['nombre_original']) ?>
+                                        </a>
                                         <label class="form-check-label text-danger ms-2">
                                             <input type="checkbox" name="eliminar_archivos[]" value="<?= $archivo['id_archivo'] ?>"> Eliminar
                                         </label>
@@ -267,6 +280,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
                             </ul>
                         </div>
                     <?php endif; ?>
+
                     <div class="mb-3">
                         <label for="archivos_adjuntos" class="form-label">Agregar Archivos Adjuntos</label>
                         <input class="form-control" type="file" name="archivos_adjuntos[]" id="archivos_adjuntos" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">

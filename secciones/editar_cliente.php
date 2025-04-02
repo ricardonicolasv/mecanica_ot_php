@@ -83,50 +83,94 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['borrar'])) {
     header("Location: lista_clientes.php");
     exit();
 }
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 ?>
 <main>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-6">
                 <h1 class="text-center">Editar Cliente</h1>
-                <form action="" method="post">
+                <form id="formEditarCliente" action="" method="post">
                     <input type="hidden" name="id_cliente" value="<?php echo $id_cliente; ?>">
-
+                    <!-- Campo Nombre -->
                     <div class="mb-3">
                         <label for="nombre_cliente" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" value="<?php echo htmlspecialchars($nombre_cliente); ?>" required>
+                        <input type="text"
+                            class="form-control"
+                            id="nombre_cliente"
+                            name="nombre_cliente"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            required
+                            value="<?php echo htmlspecialchars($nombre_cliente); ?>">
                     </div>
+                    <!-- Campo Apellido -->
                     <div class="mb-3">
                         <label for="apellido_cliente" class="form-label">Apellido</label>
-                        <input type="text" class="form-control" id="apellido_cliente" name="apellido_cliente" value="<?php echo htmlspecialchars($apellido_cliente); ?>" required>
+                        <input type="text"
+                            class="form-control"
+                            id="apellido_cliente"
+                            name="apellido_cliente"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            required
+                            value="<?php echo htmlspecialchars($apellido_cliente); ?>">
                     </div>
+                    <!-- Campo Email -->
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
+                        <input type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            value="<?php echo htmlspecialchars($email); ?>"
+                            required>
+                            <small id="emailFeedback" class="form-text"></small>
                     </div>
+
+                    <!-- Campo Contraseña -->
                     <div class="mb-3">
                         <label for="password" class="form-label">Nueva Contraseña (Opcional)</label>
                         <input type="password" class="form-control" id="password" name="password" placeholder="Dejar en blanco para no cambiar">
                     </div>
+                    <!-- Campo RUT -->
                     <div class="mb-3">
                         <label for="rut" class="form-label">RUT</label>
-                        <input type="text" class="form-control" id="rut" name="rut" value="<?php echo htmlspecialchars($rut); ?>" required>
+                        <input type="text"
+                            class="form-control"
+                            id="rut"
+                            name="rut"
+                            maxlength="12"
+                            oninput="formatRut(this)"
+                            value="<?php echo htmlspecialchars($rut); ?>" required>
                     </div>
+                    <!-- Campo Dirección -->
                     <div class="mb-3">
                         <label for="direccion" class="form-label">Dirección</label>
                         <input type="text" class="form-control" id="direccion" name="direccion" value="<?php echo htmlspecialchars($direccion); ?>">
                     </div>
+                    <!-- Campo Número de Contacto -->
                     <div class="mb-3">
                         <label for="nro_contacto" class="form-label">Número de Contacto</label>
-                        <input type="text" class="form-control" id="nro_contacto" name="nro_contacto" value="<?php echo htmlspecialchars($nro_contacto); ?>">
+                        <input type="text"
+                            class="form-control <?php if (isset($errors['nro_contacto'])) echo 'is-invalid'; ?>"
+                            id="nro_contacto"
+                            name="nro_contacto"
+                            value="<?= htmlspecialchars($nro_contacto) ?>">
+                        <small id="telefonoFeedback" class="form-text"></small>
+                        <?php if (isset($errors['nro_contacto'])): ?>
+                            <div class="invalid-feedback">
+                                <?= $errors['nro_contacto'] ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
-
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" name="editar" value="editar" class="btn btn-success">Actualizar Cliente</button>
                         <?php if ($_SESSION['rol'] === 'administrador'): ?>
-                        <button type="submit" name="borrar" value="borrar" class="btn btn-danger">Borrar Cliente</button>
+                            <button type="submit" name="borrar" value="borrar" class="btn btn-danger">Borrar Cliente</button>
                         <?php endif; ?>
                         <a href="lista_clientes.php" class="btn btn-warning">Cancelar</a>
                     </div>
@@ -135,4 +179,76 @@ include('../templates/vista_admin.php');
         </div>
     </div>
 </main>
+<script>
+    function formatRut(input) {
+        let value = input.value.toUpperCase().replace(/[^0-9K]/g, '');
+        if (value.length === 9) {
+            value = value.replace(/^(\d{2})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4');
+        } else if (value.length === 8) {
+            value = value.replace(/^(\d{1})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4');
+        }
+        input.value = value;
+    }
+</script>
+<script>
+    const validateEmail = (email) => {
+        return email.match(
+            /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+    };
+    const validate = () => {
+        const $feedback = $('#emailFeedback');
+        const email = $('#email').val();
+        $feedback.text('');
+
+        if (validateEmail(email)) {
+            $feedback.text('"' + email + '" Email válido ✅');
+            $feedback.css('color', 'green');
+            return true;
+        } else {
+            $feedback.text('"' + email + '" Email inválido ❌');
+            $feedback.css('color', 'red');
+            return false;
+        }
+    };
+    $('#email').on('input', validate);
+    $('#formEditarCliente').on('submit', function(e) {
+        const emailValido = validate();
+        const telefonoValido = validarTelefono();
+
+        if (!emailValido || !telefonoValido) {
+            e.preventDefault();
+            alert("Por favor, revisa los campos de Email y Teléfono antes de guardar.");
+        }
+    });
+    function validarNumeroChileno(numero) {
+        // Elimina espacios, guiones y paréntesis
+        const limpio = numero.replace(/[\s\-()]/g, '');
+
+        // Celulares: +56912345678, 912345678, 0912345678
+        const celularRegex = /^(?:\+?56)?(?:0)?9\d{8}$/;
+
+        // Fijos: +5621234567, 21234567, 0221234567
+        const fijoRegex = /^(?:\+?56)?(?:0)?2\d{7}$/;
+
+        return celularRegex.test(limpio) || fijoRegex.test(limpio);
+    }
+    const validarTelefono = () => {
+        const $telefono = $('#nro_contacto');
+        const $feedback = $('#telefonoFeedback');
+        const numero = $telefono.val();
+        $feedback.text('');
+
+        if (validarNumeroChileno(numero)) {
+            $feedback.text('Número válido ✅');
+            $feedback.css('color', 'green');
+            return true;
+        } else {
+            $feedback.text('Número inválido ❌');
+            $feedback.css('color', 'red');
+            return false;
+        }
+    };
+    $('#nro_contacto').on('input', validarTelefono);
+</script>
 <?php include('../templates/footer.php'); ?>

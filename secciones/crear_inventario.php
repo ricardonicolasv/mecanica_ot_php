@@ -1,9 +1,9 @@
-<?php 
+<?php
 session_start();
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
-verificarAcceso(['tecnico', 'supervisor', 'administrador']); 
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 ?>
 <main>
     <div class="container">
@@ -14,7 +14,7 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                 <form action="inventario.php" method="POST">
                     <div class="mb-3">
                         <label for="id_producto" class="form-label">Producto</label>
-                        <select name="id_producto" id="id_producto" class="form-control" required>
+                        <select name="id_producto" id="id_producto" class="form-control select2" required>
                             <option value="">Seleccione un producto</option>
                             <?php
                             include_once '../configuraciones/bd.php';
@@ -49,6 +49,20 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                         <a href="lista_inventario.php" class="btn btn-warning">Cancelar</a>
                     </div>
                 </form>
+                <script>
+                    $(document).ready(function() {
+                        $('.select2').select2({
+                            placeholder: "Seleccione un producto",
+                            allowClear: true,
+                            language: "es"
+                        });
+
+                        // Autoenfoque en el campo de búsqueda al abrir Select2
+                        $(document).on('select2:open', () => {
+                            document.querySelector('.select2-search__field').focus();
+                        });
+                    });
+                </script>
             </div>
         </div>
     </div>

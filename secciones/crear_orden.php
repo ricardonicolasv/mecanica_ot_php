@@ -40,6 +40,17 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
         <div class="row justify-content-center">
             <div class="col-8">
                 <h1 class="text-center">Crear Orden de Trabajo</h1>
+                <?php if (isset($_SESSION['error_archivo'])): ?>
+                    <div class="alert alert-danger" id="errorArchivo">
+                        <?= htmlspecialchars($_SESSION['error_archivo']) ?>
+                    </div>
+                    <script>
+                        document.getElementById("errorArchivo").scrollIntoView({
+                            behavior: "smooth"
+                        });
+                    </script>
+                    <?php unset($_SESSION['error_archivo']); ?>
+                <?php endif; ?>
                 <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="accion" value="agregar">
 

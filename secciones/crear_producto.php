@@ -2,8 +2,8 @@
 require_once('../configuraciones/bd.php');
 include('../secciones/producto.php');
 session_start();
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 ?>
@@ -27,7 +27,7 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                     </div>
                     <div class="mb-3">
                         <label for="costo_unitario" class="form-label">Costo Unitario</label>
-                        <input type="number" step="1" class="form-control" id="costo_unitario" name="costo_unitario" required>
+                        <input type="number" step="1" class="form-control" id="costo_unitario" name="costo_unitario" min="1" required>
                     </div>
 
                     <div class="mb-3">
@@ -63,6 +63,16 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                         <button type="reset" class="btn btn-secondary">Limpiar</button>
                     </div>
                 </form>
+                <script>
+                    document.querySelector('form').addEventListener('submit', function(e) {
+                        const costo = document.querySelector('input[name="costo_unitario"]').value;
+                        if (parseInt(costo, 10) < 1) {
+                            alert('El costo unitario debe ser un número positivo mayor o igual a 1.');
+                            e.preventDefault();
+                        }
+                    });
+                </script>
+
             </div>
         </div>
     </div>

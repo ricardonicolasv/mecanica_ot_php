@@ -54,10 +54,14 @@ if ($accion != '') {
 
                                 $extension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
                                 if (!in_array($extension, $extensionesPermitidas)) {
-                                    throw new Exception("Archivo no permitido: $nombreOriginal");
+                                    $_SESSION['error_archivo'] = "Archivo no permitido: $nombreOriginal";
+                                    header("Location: editar_orden.php?id=$id_ot");
+                                    exit();
                                 }
                                 if ($_FILES['archivos_adjuntos']['size'][$i] > $tamanoMaximo) {
-                                    throw new Exception("Archivo demasiado grande: $nombreOriginal");
+                                    $_SESSION['error_archivo'] = "Archivo muy grande: $nombreOriginal";
+                                    header("Location: editar_orden.php?id=$id_ot");
+                                    exit();
                                 }
 
                                 if (!file_exists($rutaCarpeta)) {
@@ -65,12 +69,13 @@ if ($accion != '') {
                                 }
 
                                 if (move_uploaded_file($nombreTmp, $rutaDestinoFisica)) {
-                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo) 
-                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo)";
+                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo, nombre_original) 
+                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo, :nombre_original)";
                                     $stmt_archivo = $conexionBD->prepare($sql_archivo);
                                     $stmt_archivo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
                                     $stmt_archivo->bindParam(':ruta_archivo', $rutaWeb, PDO::PARAM_STR);
                                     $stmt_archivo->bindParam(':tipo_archivo', $tipoArchivo, PDO::PARAM_STR);
+                                    $stmt_archivo->bindParam(':nombre_original', $nombreOriginal, PDO::PARAM_STR);
                                     $stmt_archivo->execute();
                                 }
                             }
@@ -329,10 +334,14 @@ if ($accion != '') {
                                 $extension = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
 
                                 if (!in_array($extension, $extensionesPermitidas)) {
-                                    throw new Exception("Archivo no permitido: $nombreOriginal");
+                                    $_SESSION['error_archivo'] = "Archivo no permitido: $nombreOriginal";
+                                    header("Location: editar_orden.php?id=$id_ot");
+                                    exit();
                                 }
                                 if ($_FILES['archivos_adjuntos']['size'][$i] > $tamanoMaximo) {
-                                    throw new Exception("Archivo muy grande: $nombreOriginal");
+                                    $_SESSION['error_archivo'] = "Archivo muy grande: $nombreOriginal";
+                                    header("Location: editar_orden.php?id=$id_ot");
+                                    exit();
                                 }
 
                                 if (!file_exists(dirname($rutaDestino))) {
@@ -340,12 +349,13 @@ if ($accion != '') {
                                 }
 
                                 if (move_uploaded_file($nombreTmp, $rutaDestino)) {
-                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo) 
-                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo)";
+                                    $sql_archivo = "INSERT INTO ArchivosAdjuntos_OT (id_ot, ruta_archivo, tipo_archivo, nombre_original) 
+                                                    VALUES (:id_ot, :ruta_archivo, :tipo_archivo, :nombre_original)";
                                     $stmt_archivo = $conexionBD->prepare($sql_archivo);
                                     $stmt_archivo->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
                                     $stmt_archivo->bindParam(':ruta_archivo', $rutaWeb, PDO::PARAM_STR);
                                     $stmt_archivo->bindParam(':tipo_archivo', $tipoArchivo, PDO::PARAM_STR);
+                                    $stmt_archivo->bindParam(':nombre_original', $nombreOriginal, PDO::PARAM_STR);
                                     $stmt_archivo->execute();
                                 }
                             }

@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     <div class="mb-3">
                         <label for="id_producto" class="form-label">Producto</label>
-                        <select name="id_producto" class="form-control" required>
+                        <select name="id_producto" id="id_producto" class="form-control select2" required>
                             <?php foreach ($productos as $producto) : ?>
                                 <option value="<?php echo $producto['id_producto']; ?>"
                                     <?php echo ($producto['id_producto'] == $inventario['id_producto']) ? 'selected' : ''; ?>>
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     <div class="mb-3">
                         <label for="cantidad" class="form-label">Cantidad</label>
-                        <input type="number" class="form-control" name="cantidad" value="<?php echo $inventario['cantidad']; ?>" required>
+                        <input type="number" class="form-control" name="cantidad" value="<?php echo $inventario['cantidad']; ?>" min="1" required>
                     </div>
 
                     <div class="mb-3">
@@ -166,12 +166,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" name="accion" value="editar" class="btn btn-primary">Guardar Cambios</button>
                             <?php if ($_SESSION['rol'] === 'administrador'): ?>
-                            <button type="submit" name="accion" value="borrar" class="btn btn-danger" onclick="return confirmarEliminacion();">Borrar de Inventario</button>
+                                <button type="submit" name="accion" value="borrar" class="btn btn-danger" onclick="return confirmarEliminacion();">Borrar de Inventario</button>
                             <?php endif; ?>
                             <a href="lista_inventario.php" class="btn btn-warning">Cancelar</a>
                         </div>
                     </form>
                 </form>
+                <script>
+                    $(document).ready(function() {
+                        $('.select2').select2({
+                            placeholder: "Seleccione un producto",
+                            allowClear: true,
+                            language: "es"
+                        });
+
+                        // Autoenfoque en el campo de búsqueda al abrir Select2
+                        $(document).on('select2:open', () => {
+                            document.querySelector('.select2-search__field').focus();
+                        });
+                    });
+                    document.querySelector('form').addEventListener('submit', function(e) {
+                        const cantidad = document.querySelector('input[name="cantidad"]').value;
+                        if (cantidad < 1) {
+                            alert('La cantidad debe ser al menos 1.');
+                            e.preventDefault();
+                        }
+                    });
+                </script>
             </div>
         </div>
     </div>

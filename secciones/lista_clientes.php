@@ -1,8 +1,8 @@
-<?php 
+<?php
 session_start();
 include('../secciones/clientes.php');
-include('../templates/header_admin.php'); 
-include('../templates/vista_admin.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
 ?>
@@ -20,7 +20,10 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                                 value="<?php echo htmlspecialchars($_GET['buscar'] ?? ''); ?>">
                         </div>
                         <div class="col-md-3">
-                            <input type="text" name="buscar_rut" class="form-control" placeholder="Buscar por RUT..."
+                            <input type="text" name="buscar_rut" class="form-control"
+                                placeholder="Buscar por RUT..."
+                                maxlength="15"
+                                oninput="formatRut(this)"
                                 value="<?php echo htmlspecialchars($_GET['buscar_rut'] ?? ''); ?>">
                         </div>
                         <div class="col-md-3">
@@ -105,7 +108,7 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                             <th>Celular</th>
                             <th>Contraseña</th>
                             <?php if ($_SESSION['rol'] === 'administrador'): ?>
-                            <th>Acciones</th>
+                                <th>Acciones</th>
                             <?php endif; ?>
                         </tr>
                     </thead>
@@ -125,7 +128,7 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                                         <form action="editar_cliente.php" method="get">
                                             <input type="hidden" name="id_cliente" value="<?php echo $cliente['id_cliente']; ?>">
                                             <?php if (in_array($_SESSION['rol'], ['supervisor', 'administrador'])): ?>
-                                            <button type="submit" class="btn btn-info">Seleccionar</button>
+                                                <button type="submit" class="btn btn-info">Seleccionar</button>
                                             <?php endif; ?>
                                         </form>
                                     </td>
@@ -185,4 +188,31 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
         </div>
     </div>
 </main>
+<script>
+    function formatRut(input) {
+        let cleaned = input.value.replace(/[^0-9kK]/g, '').toUpperCase();
+
+        // Si tiene menos de 2 caracteres, no formatear aún
+        if (cleaned.length < 2) {
+            input.value = cleaned;
+            return;
+        }
+
+        // Separar cuerpo y dígito verificador
+        let cuerpo = cleaned.slice(0, -1);
+        let dv = cleaned.slice(-1);
+
+        // Agregar puntos cada 3 dígitos desde el final del cuerpo
+        let cuerpoFormateado = '';
+        while (cuerpo.length > 3) {
+            cuerpoFormateado = '.' + cuerpo.slice(-3) + cuerpoFormateado;
+            cuerpo = cuerpo.slice(0, -3);
+        }
+        cuerpoFormateado = cuerpo + cuerpoFormateado;
+
+        input.value = cuerpoFormateado + '-' + dv;
+    }
+</script>
+
+
 <?php include('../templates/footer.php'); ?>

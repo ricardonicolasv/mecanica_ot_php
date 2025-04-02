@@ -17,7 +17,7 @@ $nro_contacto = $_SESSION['nro_contacto'] ?? '';
 
 <main>
     <div class="container mt-5">
-        <h1 class="text-center">¡Bienvenido, <?= htmlspecialchars($nombre_cliente); ?>!</h1>
+        <h1 class="text-center">¡Bienvenid@, <?= htmlspecialchars($nombre_cliente); ?>!</h1>
         <div class="card mt-4">
             <div class="card-header">
                 Mis Datos
