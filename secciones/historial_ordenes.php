@@ -77,22 +77,19 @@ foreach ($historial as $registro) {
             $desc = "<strong>Se ha creado una nueva Orden de Trabajo.</strong>";
             break;
         case 'Cliente':
-            $desc = "<strong>Cliente</strong> de <em>"
-                . ($registro['nombre_cliente_anterior'] ?? $registro['valor_anterior'])
-                . "</em> a <em>"
-                . ($registro['nombre_cliente_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
+            $nombreAnterior = $clientesMap[$registro['valor_anterior']] ?? $registro['valor_anterior'];
+            $nombreNuevo = $clientesMap[$registro['valor_nuevo']] ?? $registro['valor_nuevo'];
+            $desc = "<strong>Cliente</strong> de <em>$nombreAnterior</em> a <em>$nombreNuevo</em>";
             break;
         case 'Responsable':
-            $desc = "<strong>Responsable</strong> de <em>"
-                . ($registro['nombre_responsable_anterior'] ?? $registro['valor_anterior'])
-                . "</em> a <em>"
-                . ($registro['nombre_responsable_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
+            $nombreAnterior = $usuariosMap[$registro['valor_anterior']] ?? $registro['valor_anterior'];
+            $nombreNuevo = $usuariosMap[$registro['valor_nuevo']] ?? $registro['valor_nuevo'];
+            $desc = "<strong>Responsable</strong> de <em>$nombreAnterior</em> a <em>$nombreNuevo</em>";
             break;
         case 'Estado':
-            $desc = "<strong>Estado</strong> de <em>"
-                . ($registro['nombre_estado_anterior'] ?? $registro['valor_anterior'])
-                . "</em> a <em>"
-                . ($registro['nombre_estado_nuevo'] ?? $registro['valor_nuevo']) . "</em>";
+            $nombreAnterior = $estadosMap[$registro['valor_anterior']] ?? $registro['valor_anterior'];
+            $nombreNuevo = $estadosMap[$registro['valor_nuevo']] ?? $registro['valor_nuevo'];
+            $desc = "<strong>Estado</strong> de <em>$nombreAnterior</em> a <em>$nombreNuevo</em>";
             break;
         case 'Tipo de Trabajo':
             $decodedAnterior = json_decode($registro['valor_anterior'], true);
@@ -114,11 +111,17 @@ foreach ($historial as $registro) {
             $desc = "<strong>Cantidad</strong> de <em>" . $registro['valor_anterior'] . "</em> a <em>" . $registro['valor_nuevo'] . "</em>";
             break;
         case 'Costo Total':
-            $desc = "<strong>Costo Total</strong> de <em>$" . number_format($registro['valor_anterior'], 0, ',', '.') . "</em> a <em>$" . number_format($registro['valor_nuevo'], 0, ',', '.') . "</em>";
+            $anteriorNumerico = (float) filter_var($registro['valor_anterior'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $nuevoNumerico = (float) filter_var($registro['valor_nuevo'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+            $desc = "<strong>Costo Total</strong> de <em>$" . number_format($anteriorNumerico, 0, ',', '.') . "</em> a <em>$" . number_format($nuevoNumerico, 0, ',', '.') . "</em>";
             break;
         case 'Descripción':
             $desc = "<strong>Descripción</strong> de <em>" . $registro['valor_anterior'] . "</em> a <em>" . $registro['valor_nuevo'] . "</em>";
             break;
+        case 'Creación':
+            $desc = "<strong>Se ha creado una nueva Orden de Trabajo.</strong>";
+            break;
+
         default:
             $desc = "<strong>" . htmlspecialchars($registro['campo_modificado']) . "</strong> de <em>"
                 . htmlspecialchars($registro['valor_anterior']) . "</em> a <em>"

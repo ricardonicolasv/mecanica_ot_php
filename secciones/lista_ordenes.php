@@ -63,19 +63,20 @@ $sqlBase = "FROM OT
     WHERE OT.estado != 'Eliminada'";
 
 if (!empty($filtro_cliente)) {
-    $sqlBase .= " AND Clientes.nombre_cliente LIKE :filtro_cliente";
+    $sqlBase .= " AND (Clientes.nombre_cliente LIKE :filtro_cliente OR Clientes.apellido_cliente LIKE :filtro_cliente)";
 }
+
 if (!empty($filtro_rut)) {
-    $sqlBase .= " AND Clientes.rut LIKE :filtro_rut";
+    $sqlBase .= " AND REPLACE(REPLACE(REPLACE(Clientes.rut, '.', ''), '-', ''), ' ', '') LIKE :filtro_rut";
 }
 if (!empty($filtro_responsable)) {
-    $sqlBase .= " AND Usuarios.nombre LIKE :filtro_responsable";
+    $sqlBase .= " AND (Usuarios.nombre LIKE :filtro_responsable OR Usuarios.apellido LIKE :filtro_responsable)";
 }
 if (!empty($filtro_estado)) {
     $sqlBase .= " AND Estado_OT.id_estado = :filtro_estado";
 }
 if (!empty($filtro_fecha_inicio) && !empty($filtro_fecha_fin)) {
-    $sqlBase .= " AND OT.fecha_creacion BETWEEN :filtro_fecha_inicio AND :filtro_fecha_fin";
+    $sqlBase .= " AND DATE(CONVERT_TZ(OT.fecha_creacion, '+00:00', '-04:00')) BETWEEN :filtro_fecha_inicio AND :filtro_fecha_fin";
 }
 
 // Consulta para obtener el total de registros
@@ -86,7 +87,7 @@ if (!empty($filtro_cliente)) {
     $consultaTotal->bindParam(':filtro_cliente', $buscarCliente, PDO::PARAM_STR);
 }
 if (!empty($filtro_rut)) {
-    $buscarRut = "%$filtro_rut%";
+    $buscarRut = "%" . preg_replace('/[^0-9kK]/', '', $filtro_rut) . "%";
     $consultaTotal->bindParam(':filtro_rut', $buscarRut, PDO::PARAM_STR);
 }
 if (!empty($filtro_responsable)) {
@@ -105,7 +106,7 @@ $totalRecords = $consultaTotal->fetch(PDO::FETCH_ASSOC)['total'];
 $totalPages = ceil($totalRecords / $limit);
 
 // Construir la consulta principal con LIMIT
-$sql = "SELECT OT.id_ot, Clientes.nombre_cliente, Clientes.rut, Usuarios.nombre AS responsable, 
+$sql = "SELECT OT.id_ot, Clientes.nombre_cliente,Clientes.apellido_cliente, Clientes.rut, Usuarios.nombre AS responsable, Usuarios.apellido AS responsable_apellido, 
                Estado_OT.nombre_estado, 
                DATE_FORMAT(CONVERT_TZ(OT.fecha_creacion, '+00:00', '-04:00'), '%Y-%m-%d %H:%i:%s') AS fecha_creacion, 
                OT.costo_total
@@ -143,7 +144,7 @@ $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")-
             <div class="row">
                 <!-- Campo para buscar por RUT -->
                 <div class="col-md-2">
-                    <input type="text" name="filtro_rut" class="form-control" placeholder="Buscar por RUT" value="<?php echo htmlspecialchars($filtro_rut); ?>">
+                    <input type="text" name="filtro_rut" class="form-control" placeholder="Buscar por RUT" maxlength="12" oninput="formatRut(this)" value="<?php echo htmlspecialchars($filtro_rut); ?>">
                 </div>
                 <!-- Campo para buscar por Cliente -->
                 <div class="col-md-2">
@@ -202,9 +203,9 @@ $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")-
                                     <?= $orden['id_ot'] ?>
                                 </a>
                             </td>
-                            <td><?= $orden['nombre_cliente'] ?></td>
+                            <td><?= $orden['nombre_cliente'] . ' ' . $orden['apellido_cliente'] ?></td>
                             <td><?= $orden['rut'] ?></td>
-                            <td><?= $orden['responsable'] ?></td>
+                            <td><?= $orden['responsable']. ' ' . $orden['responsable_apellido'] ?></td>
                             <td>
                                 <?php if ($orden['nombre_estado'] === "Completada"): ?>
                                     <!-- Se muestra un badge con el ícono de ticket para las OT completadas -->
@@ -337,5 +338,28 @@ $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")-
         return confirm("¿Estás seguro de que deseas eliminar esta Orden de Trabajo?");
     }
 </script>
+<script>
+    function formatRut(input) {
+        let cleaned = input.value.replace(/[^0-9kK]/g, '').toUpperCase();
+
+        if (cleaned.length < 2) {
+            input.value = cleaned;
+            return;
+        }
+
+        let cuerpo = cleaned.slice(0, -1);
+        let dv = cleaned.slice(-1);
+
+        let cuerpoFormateado = '';
+        while (cuerpo.length > 3) {
+            cuerpoFormateado = '.' + cuerpo.slice(-3) + cuerpoFormateado;
+            cuerpo = cuerpo.slice(0, -3);
+        }
+        cuerpoFormateado = cuerpo + cuerpoFormateado;
+
+        input.value = cuerpoFormateado + '-' + dv;
+    }
+</script>
+
 
 <?php include('../templates/footer.php'); ?>

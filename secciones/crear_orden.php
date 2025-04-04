@@ -5,26 +5,20 @@ include('../templates/header_admin.php');
 include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
-
 $conexionBD = BD::crearInstancia();
-
 // Obtener datos desde BD
 $consultaClientes = $conexionBD->prepare("SELECT id_cliente, nombre_cliente, email, nro_contacto FROM Clientes");
 $consultaClientes->execute();
 $clientes = $consultaClientes->fetchAll(PDO::FETCH_ASSOC);
-
 $consultaUsuarios = $conexionBD->prepare("SELECT id_usuario, nombre FROM Usuarios");
 $consultaUsuarios->execute();
 $usuarios = $consultaUsuarios->fetchAll(PDO::FETCH_ASSOC);
-
 $consultaEstados = $conexionBD->prepare("SELECT id_estado, nombre_estado FROM Estado_OT");
 $consultaEstados->execute();
 $estados = $consultaEstados->fetchAll(PDO::FETCH_ASSOC);
-
 $consultaServicios = $conexionBD->prepare("SELECT id_servicio, nombre_servicio, COALESCE(costo_servicio,0) AS costo_servicio FROM Servicios");
 $consultaServicios->execute();
 $servicios = $consultaServicios->fetchAll(PDO::FETCH_ASSOC);
-
 // Consultar productos una vez para reutilizar
 $consultaProductos = $conexionBD->prepare("SELECT p.id_producto, p.marca, p.modelo, p.costo_unitario,
     COALESCE(SUM(i.cantidad), 0) AS stock_disponible 
@@ -34,7 +28,6 @@ $consultaProductos = $conexionBD->prepare("SELECT p.id_producto, p.marca, p.mode
 $consultaProductos->execute();
 $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <main>
     <div class="container">
         <div class="row justify-content-center">
@@ -53,7 +46,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                 <?php endif; ?>
                 <form action="ordenes_trabajo.php" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="accion" value="agregar">
-
                     <!-- Cliente -->
                     <div class="mb-3">
                         <label for="id_cliente" class="form-label">Cliente</label>
@@ -65,15 +57,11 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                                 </option>
                             <?php endforeach; ?>
                         </select>
-
                         <!-- Botón para crear cliente -->
                         <div class="mt-2" id="btn_crear_cliente" style="display: none;">
                             <a href="crear_clientes.php" class="btn btn-outline-primary btn-sm">➕ Crear nuevo cliente</a>
                         </div>
-
                     </div>
-
-
                     <!-- Info cliente -->
                     <div class="mb-3">
                         <label class="form-label">Correo Electrónico:</label>
@@ -83,7 +71,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                         <label class="form-label">Número de Contacto:</label>
                         <input type="text" id="cliente_contacto" class="form-control" readonly>
                     </div>
-
                     <!-- Responsable -->
                     <div class="mb-3">
                         <label for="id_responsable" class="form-label">Responsable</label>
@@ -94,7 +81,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                             <?php endforeach; ?>
                         </select>
                     </div>
-
                     <!-- Estado -->
                     <div class="mb-3">
                         <label for="id_estado" class="form-label">Estado</label>
@@ -105,7 +91,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                             <?php endforeach; ?>
                         </select>
                     </div>
-
                     <!-- Tipos de Trabajo -->
                     <h4>Tipos de Trabajo</h4>
                     <table class="table">
@@ -132,7 +117,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                         </tbody>
                     </table>
                     <button type="button" class="btn btn-success" onclick="agregarServicio()">Agregar Tipo de Trabajo</button>
-
                     <!-- Productos -->
                     <h4 class="mt-4">Productos Asociados</h4>
                     <table class="table">
@@ -147,25 +131,21 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
                         <tbody id="productos_lista"></tbody>
                     </table>
                     <button type="button" class="btn btn-success" onclick="agregarProducto()">Agregar Producto</button>
-
                     <!-- Costo Total -->
                     <div class="mb-3 mt-3">
                         <label for="costo_total" class="form-label">Costo Total</label>
                         <input type="text" class="form-control" id="costo_total" name="costo_total" readonly>
                     </div>
-
                     <!-- Descripción -->
                     <div class="mb-3">
                         <label for="descripcion_actividad" class="form-label">Descripción de la Orden</label>
                         <textarea class="form-control" id="descripcion_actividad" name="descripcion_actividad" rows="3" required></textarea>
                     </div>
-
                     <!-- Archivos -->
                     <div class="mb-3">
                         <label for="archivo_adjunto" class="form-label">Archivos Adjuntos</label>
                         <input class="form-control" type="file" name="archivos_adjuntos[]" id="archivo_adjunto" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
                     </div>
-
                     <!-- Botones -->
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Crear Orden</button>
@@ -177,7 +157,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </main>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Inicializar Select2 en todos los .select2 excepto #id_cliente
@@ -190,8 +169,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
         $(document).on('select2:open', () => {
             document.querySelector('.select2-container--open .select2-search__field')?.focus();
         });
-
-
         // Inicializar Select2 en el campo de cliente
         $('#id_cliente').select2({
                 width: '100%',
@@ -219,9 +196,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
             .on('select2:clear', function() {
                 actualizarDatosCliente();
             });
-
-
-
         // Mostrar info del cliente seleccionado
         window.actualizarDatosCliente = function() {
             const cliente = document.querySelector("#id_cliente option:checked");
@@ -249,7 +223,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
         <td><input type="number" class="form-control" name="cantidades[]" min="1" value="1" required oninput="actualizarCostoTotal()"></td>
         <td><button type="button" class="btn btn-danger" onclick="eliminarProducto(this)">Eliminar</button></td>
     `;
-
             productosLista.appendChild(row);
 
             // Activar Select2 en el nuevo select
@@ -266,8 +239,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
 
             actualizarCostoTotal();
         };
-
-
         window.actualizarStock = function(select) {
             const stock = select.options[select.selectedIndex].dataset.stock || '';
             select.closest('tr').querySelector("input[name='stock_disponible[]']").value = stock;
@@ -277,11 +248,9 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
             btn.closest("tr").remove();
             actualizarCostoTotal();
         };
-
         window.agregarServicio = function() {
             const serviciosLista = document.getElementById("servicios_lista");
             const row = document.createElement("tr");
-
             row.innerHTML = `
                 <td>
                     <select class="form-select" name="id_servicio[]" required onchange="actualizarCostoTotal()">
@@ -302,7 +271,6 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
             btn.closest("tr").remove();
             actualizarCostoTotal();
         };
-
         window.actualizarCostoTotal = function() {
             let total = 0;
 
@@ -324,5 +292,4 @@ $listaProductos = $consultaProductos->fetchAll(PDO::FETCH_ASSOC);
         actualizarCostoTotal();
     });
 </script>
-
 <?php include('../templates/footer.php'); ?>

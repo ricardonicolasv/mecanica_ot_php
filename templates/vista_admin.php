@@ -46,6 +46,14 @@
                                 <li><a class="dropdown-item" href="lista_producto.php">Lista de Productos</a></li>
                             </ul>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Reportes
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="reportesDropdown">
+                                <li><a class="dropdown-item" href="reportes_ordenes.php">Generar Reportes</a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>

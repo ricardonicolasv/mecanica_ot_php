@@ -495,6 +495,13 @@ if ($accion != '') {
                     // Detectar eliminaciones
                     foreach ($productos_por_detalle as $id_detalle => $producto) {
                         if (!in_array($id_detalle, $posted_detalles_existentes)) {
+                            // Eliminar de la base de datos
+                            $sql_eliminar_producto = "DELETE FROM Detalle_OT WHERE id_detalle = :id_detalle";
+                            $consulta_eliminar_producto = $conexionBD->prepare($sql_eliminar_producto);
+                            $consulta_eliminar_producto->bindParam(':id_detalle', $id_detalle, PDO::PARAM_INT);
+                            $consulta_eliminar_producto->execute();
+
+                            // Registrar en historial
                             $sql_get_producto = "SELECT marca FROM Productos WHERE id_producto = :id_producto";
                             $stmt = $conexionBD->prepare($sql_get_producto);
                             $stmt->bindParam(':id_producto', $producto['id_producto'], PDO::PARAM_INT);
@@ -507,6 +514,7 @@ if ($accion != '') {
                             ];
                         }
                     }
+
 
                     // Actualizar o insertar productos en la base de datos
                     for ($i = 0; $i < count($posted_productos); $i++) {

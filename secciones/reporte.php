@@ -105,6 +105,13 @@ class PDF extends FPDF
         }
         return $nl;
     }
+    function Footer()
+    {
+        // Posición a 1.5 cm del final
+        $this->SetY(-15);
+        $this->SetFont('Arial', 'I', 8);
+        $this->Cell(0, 10, utf8_decode('Página ') . $this->PageNo() . ' de {nb}', 0, 0, 'C');
+    }
 }
 
 // Función para convertir de UTF-8 a ISO-8859-1
@@ -197,6 +204,7 @@ $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
 
 // INICIO DE LA GENERACIÓN DEL PDF CON LA CLASE PDF extendida
 $pdf = new PDF();
+$pdf->AliasNbPages();
 $pdf->AddPage();
 
 // Título del Reporte

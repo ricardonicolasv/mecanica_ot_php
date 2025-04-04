@@ -18,6 +18,7 @@ if (!$id_ot) {
 // Consulta principal de la OT (sin incluir directamente los servicios)
 $sql = "SELECT OT.*, 
                Clientes.nombre_cliente,
+               Clientes.apellido_cliente,
                Clientes.rut,
                Clientes.email AS cliente_email, 
                Clientes.nro_contacto AS cliente_contacto,
@@ -107,7 +108,7 @@ $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">ID OT: <?= htmlspecialchars($orden['id_ot']) ?></h5>
-                <p><strong>Cliente:</strong> <?= htmlspecialchars($orden['nombre_cliente']) ?></p>
+                <p><strong>Cliente:</strong> <?= htmlspecialchars($orden['nombre_cliente'] . ' ' . $orden['apellido_cliente']) ?></p>
                 <p><strong>Rut Cliente:</strong> <?= htmlspecialchars($orden['rut']) ?></p>
                 <p><strong>Email:</strong> <?= htmlspecialchars($orden['cliente_email']) ?></p>
                 <p><strong>Contacto:</strong> <?= htmlspecialchars($orden['cliente_contacto']) ?></p>
@@ -176,8 +177,13 @@ $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
             <div class="mt-4">
                 <a href="lista_ordenes.php" class="btn btn-secondary">Volver</a>
                 <a href="editar_orden.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-info">Editar</a>
-                <a href="reporte.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-primary">Reporte</a>
             </div>
+            <div class="text-end mb-3">
+                <a href="reporte.php?id=<?= htmlspecialchars($orden['id_ot']) ?>" class="btn btn-success" target="_blank">
+                    Generar Reporte PDF
+                </a>
+            </div>
+
             </div>
         </div>
         <main class="container">
@@ -288,7 +294,11 @@ $historial = $consulta_historial->fetchAll(PDO::FETCH_ASSOC);
                                                 $descripciones[] = "Producto eliminado: <strong>$anterior</strong>";
                                                 break;
                                             case 'Costo Total':
-                                                $descripciones[] = "Costo Total de <strong>$anterior</strong> a <strong>$nuevo</strong>";
+                                                $anteriorNumerico = (float) filter_var($anterior, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                                $nuevoNumerico = (float) filter_var($nuevo, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                                $anteriorFormateado = '$' . number_format($anteriorNumerico, 0, ',', '.');
+                                                $nuevoFormateado = '$' . number_format($nuevoNumerico, 0, ',', '.');
+                                                $descripciones[] = "Costo Total de <strong>$anteriorFormateado</strong> a <strong>$nuevoFormateado</strong>";
                                                 break;
                                             case 'Descripción':
                                                 $descripciones[] = "Descripción de <strong>$anterior</strong> a <strong>$nuevo</strong>";

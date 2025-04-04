@@ -16,7 +16,9 @@ include('../templates/header.php');
                             class="form-control <?php if (isset($errors['nombre_cliente'])) echo 'is-invalid'; ?>"
                             id="nombre_cliente"
                             name="nombre_cliente"
-                            oninput="this.value = this.value.replace(/\\d/g, '')"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
                             required
                             value="<?= htmlspecialchars($nombre_cliente) ?>">
                         <?php if (isset($errors['nombre_cliente'])): ?>
@@ -32,7 +34,9 @@ include('../templates/header.php');
                             class="form-control <?php if (isset($errors['apellido_cliente'])) echo 'is-invalid'; ?>"
                             id="apellido_cliente"
                             name="apellido_cliente"
-                            oninput="this.value = this.value.replace(/\\d/g, '')"
+                            oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '')"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+                            title="Solo se permiten letras"
                             required
                             value="<?= htmlspecialchars($apellido_cliente) ?>">
                         <?php if (isset($errors['apellido_cliente'])): ?>

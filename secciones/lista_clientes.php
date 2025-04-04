@@ -22,7 +22,7 @@ verificarAcceso(['tecnico', 'supervisor', 'administrador']);
                         <div class="col-md-3">
                             <input type="text" name="buscar_rut" class="form-control"
                                 placeholder="Buscar por RUT..."
-                                maxlength="15"
+                                maxlength="12"
                                 oninput="formatRut(this)"
                                 value="<?php echo htmlspecialchars($_GET['buscar_rut'] ?? ''); ?>">
                         </div>

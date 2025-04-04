@@ -38,13 +38,15 @@ $consulta_productos = $conexionBD->prepare($sql_productos);
 $consulta_productos->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
 $consulta_productos->execute();
 $productos = $consulta_productos->fetchAll(PDO::FETCH_ASSOC);
+$consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
+$todosLosProductos = $consultaTodosProductos->fetchAll(PDO::FETCH_ASSOC);
 
 if (!$orden) {
     die("Error: No se encontró la Orden de Trabajo.");
 }
 
 // Obtener listas para los selects
-$clientes = $conexionBD->query("SELECT id_cliente, nombre_cliente, email, nro_contacto FROM Clientes")->fetchAll(PDO::FETCH_ASSOC);
+$clientes = $conexionBD->query("SELECT id_cliente, nombre_cliente, apellido_cliente, email, nro_contacto FROM Clientes")->fetchAll(PDO::FETCH_ASSOC);
 $responsables = $conexionBD->query("SELECT id_usuario, nombre FROM Usuarios")->fetchAll(PDO::FETCH_ASSOC);
 $estados = $conexionBD->query("SELECT id_estado, nombre_estado FROM Estado_OT")->fetchAll(PDO::FETCH_ASSOC);
 $servicios = $conexionBD->query("
@@ -112,7 +114,7 @@ $costo_total_calculado = $total_productos + $total_servicios;
                                     data-email="<?= $cliente['email'] ?>"
                                     data-contacto="<?= $cliente['nro_contacto'] ?>"
                                     <?= ($cliente['id_cliente'] == $orden['id_cliente']) ? 'selected' : '' ?>>
-                                    <?= $cliente['nombre_cliente'] ?>
+                                    <?= $cliente['nombre_cliente']. ' ' .$cliente['apellido_cliente'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -231,8 +233,6 @@ $costo_total_calculado = $total_productos + $total_servicios;
                                             <select class="form-select select2" name="id_producto[]" onchange="actualizarCostoTotal()">
                                                 <option value="" disabled>Seleccione un Producto</option>
                                                 <?php
-                                                $consultaTodosProductos = $conexionBD->query("SELECT id_producto, marca, modelo, COALESCE(costo_unitario, 0) AS costo_unitario FROM Productos");
-                                                $todosLosProductos = $consultaTodosProductos->fetchAll(PDO::FETCH_ASSOC);
                                                 foreach ($todosLosProductos as $prod): ?>
                                                     <option value="<?= htmlspecialchars($prod['id_producto']) ?>"
                                                         data-costo="<?= htmlspecialchars($prod['costo_unitario']) ?>"
