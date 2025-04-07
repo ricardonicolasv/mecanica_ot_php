@@ -108,10 +108,8 @@ $pdf->Cell(38, 8, 'Estado', 1);
 $pdf->Cell(25, 8, 'Fecha', 1);
 $pdf->Cell(25, 8, 'Costo', 1);
 $pdf->Ln();
-
 $pdf->SetFont('Arial', '', 10);
 $total_general = 0;
-
 foreach ($ordenes as $orden) {
     $pdf->Cell(10, 8, $orden['id_ot'], 1);
     $pdf->Cell(35, 8, utf8_decode(mb_strimwidth($orden['nombre_cliente'] . ' ' . $orden['apellido_cliente'], 0, 32, "...")), 1);
@@ -123,8 +121,6 @@ foreach ($ordenes as $orden) {
     $pdf->Ln();
     $total_general += $orden['costo_total'];
 }
-
-
 // Total General
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(165, 8, 'Total General', 1);

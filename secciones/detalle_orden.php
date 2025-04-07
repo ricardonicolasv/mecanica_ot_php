@@ -1,11 +1,13 @@
 <?php
 date_default_timezone_set('America/Santiago');
 session_start();
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['tecnico', 'supervisor', 'administrador']);
+
 include('../configuraciones/bd.php');
 include('../templates/header_admin.php');
 include('../templates/vista_admin.php');
-include('../configuraciones/verificar_acceso.php');
-verificarAcceso(['tecnico', 'supervisor', 'administrador']);
+
 
 $conexionBD = BD::crearInstancia();
 

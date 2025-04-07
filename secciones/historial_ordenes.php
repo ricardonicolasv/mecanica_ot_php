@@ -1,10 +1,11 @@
 <?php
-include('../configuraciones/bd.php');
 session_start();
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['tecnico', 'supervisor', 'administrador']);
+include('../configuraciones/bd.php'); 
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
+
 
 $conexionBD = BD::crearInstancia();
 

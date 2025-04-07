@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once '../configuraciones/bd.php'; // Evita cargar el archivo más de una vez
 $conexionBD = BD::crearInstancia();
 

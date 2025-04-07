@@ -1,4 +1,23 @@
 <?php
+// Bloqueo absoluto del acceso
+echo "<!DOCTYPE html><html><head>";
+echo "<meta charset='UTF-8'>";
+echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+echo "</head><body>";
+echo "<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Acceso restringido',
+            text: 'Esta ruta no está disponible.',
+            confirmButtonText: 'Volver'
+        }).then(() => {
+            window.location.href = 'index.php'; // o donde quieras redirigir
+        });
+    });
+</script>";
+echo "</body></html>";
+exit();
 require_once('../configuraciones/bd.php');
 $conexionBD = BD::crearInstancia();
 
@@ -45,8 +64,8 @@ if ($accion != '') {
                                 $nombreOriginal = basename($_FILES['archivos_adjuntos']['name'][$i]);
                                 $tipoArchivo = $_FILES['archivos_adjuntos']['type'][$i];
                                 $rutaWeb = 'archivos_adjuntos/' . uniqid() . '_' . $nombreOriginal;
-                                $rutaCarpeta = __DIR__ . '/archivos_adjuntos';
-                                $rutaDestinoFisica = $rutaCarpeta . '/' . basename($rutaWeb);
+                                $rutaDestinoFisica = __DIR__ . '/../' . $rutaWeb;
+
 
                                 // 🛡 Validación de archivo
                                 $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];

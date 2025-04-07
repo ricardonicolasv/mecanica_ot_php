@@ -1,10 +1,11 @@
 <?php
 session_start();
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso('cliente');
 require_once('../configuraciones/bd.php');
 include('../secciones/clientes.php');
 include('../templates/header_cliente.php');
-include('../configuraciones/verificar_acceso.php');
-verificarAcceso('cliente');
+
 
 // Validación defensiva: asegura que las variables existen
 $nombre_cliente = $_SESSION['nombre'] ?? 'Cliente';
@@ -32,13 +33,13 @@ $nro_contacto = $_SESSION['nro_contacto'] ?? '';
             </ul>
         </div>
         <div class="mt-4 text-center">
-        <td>
-            <form action="editar_cuenta.php" method="get">
-                <input type="hidden" name="id_cliente" value="<?php echo $cliente['id_cliente']; ?>">
+            <td>
+                <form action="editar_cuenta.php" method="get">
+                    <input type="hidden" name="id_cliente" value="<?php echo $cliente['id_cliente']; ?>">
                     <button type="submit" class="btn btn-info">Editar</button>
-                    <a href="../index.php" class="btn btn-danger">Cerrar Sesión</a>
-            </form>
-        </td>
+                    <a class="btn btn-danger" href="../secciones/logout.php">Cerrar Sesión</a>
+                </form>
+            </td>
         </div>
     </div>
 </main>

@@ -1,11 +1,12 @@
 <?php
-require_once('../configuraciones/bd.php');
-include('../secciones/usuarios.php');
 session_start();
-include('../templates/header_admin.php');
-include('../templates/vista_admin.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['administrador']);
+require_once('../configuraciones/bd.php');
+include('../secciones/usuarios.php');
+include('../templates/header_admin.php');
+include('../templates/vista_admin.php');
+
 ?>
 <main>
     <div class="container">

@@ -1,8 +1,9 @@
 <?php 
 session_start();
-require_once('../configuraciones/bd.php');
 include('../configuraciones/verificar_acceso.php');
 verificarAcceso(['cliente']); // Solo clientes
+require_once('../configuraciones/bd.php');
+
 
 date_default_timezone_set('America/Santiago');
 $conexionBD = BD::crearInstancia();

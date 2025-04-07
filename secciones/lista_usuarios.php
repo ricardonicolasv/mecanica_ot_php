@@ -1,9 +1,11 @@
 <?php
 session_start();
+include('../configuraciones/verificar_acceso.php');
+verificarAcceso(['administrador']);
+include('../configuraciones/bd.php'); // si necesitas conexión aquí también
 include('../templates/header_admin.php');
 include('../templates/vista_admin.php');
-include('../configuraciones/verificar_acceso.php');
-verificarAcceso(['administrador']); ?>
+?>
 <main>
     <?php include('../secciones/usuarios.php'); ?>
     <div class="container">

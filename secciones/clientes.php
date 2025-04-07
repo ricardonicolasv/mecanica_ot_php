@@ -1,4 +1,5 @@
 <?php
+
 require_once '../configuraciones/bd.php'; // Cargar configuración de base de datos
 $conexionBD = BD::crearInstancia();
 

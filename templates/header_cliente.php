@@ -55,7 +55,7 @@
                                         </li>
                                     <?php endif; ?>
                                     <li class="nav-item">
-                                        <a class="nav-link" href="../index.php">Cerrar Sesión</a>
+                                        <a class="nav-link" href="../secciones/logout.php">Cerrar Sesión</a>
                                     </li>
                                 </ul>
 
