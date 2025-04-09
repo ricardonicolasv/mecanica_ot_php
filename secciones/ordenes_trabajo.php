@@ -1,23 +1,4 @@
 <?php
-// Bloqueo absoluto del acceso
-echo "<!DOCTYPE html><html><head>";
-echo "<meta charset='UTF-8'>";
-echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
-echo "</head><body>";
-echo "<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        Swal.fire({
-            icon: 'error',
-            title: 'Acceso restringido',
-            text: 'Esta ruta no está disponible.',
-            confirmButtonText: 'Volver'
-        }).then(() => {
-            window.location.href = 'index.php'; // o donde quieras redirigir
-        });
-    });
-</script>";
-echo "</body></html>";
-exit();
 require_once('../configuraciones/bd.php');
 $conexionBD = BD::crearInstancia();
 
@@ -53,6 +34,15 @@ if ($accion != '') {
                     $consulta_ot->bindParam(':fecha_creacion', $fecha_creacion);
                     $consulta_ot->execute();
                     $id_ot = $conexionBD->lastInsertId();
+
+                    // Registrar historial de creación
+                    $sql_historial = "INSERT INTO historial_ot (id_ot, id_responsable, campo_modificado, valor_anterior, valor_nuevo, fecha_modificacion) 
+                                      VALUES (:id_ot, :id_responsable, 'Creación', '', '', NOW())";
+                    $consulta_historial = $conexionBD->prepare($sql_historial);
+                    $consulta_historial->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
+                    $consulta_historial->bindParam(':id_responsable', $id_responsable, PDO::PARAM_INT); // Usa el responsable asignado como autor
+                    $consulta_historial->execute();
+
 
                     // Subir archivo (si hay)
                     if (!empty($_FILES['archivos_adjuntos']['name'][0])) {
@@ -408,10 +398,15 @@ if ($accion != '') {
 
                     // Registrar en historial global el cambio de servicios si hubo modificación
                     $old_services = array_map(function ($s) {
-                        return $s['id_servicio'];
+                        return intval($s['id_servicio']);
                     }, $servicios_actuales);
-                    $new_services = $id_servicios_post;
-                    if (json_encode($old_services) !== json_encode($new_services)) {
+                    $new_services = array_map('intval', $id_servicios_post);
+
+                    // Ordenar los arrays antes de comparar
+                    sort($old_services);
+                    sort($new_services);
+
+                    if ($old_services !== $new_services) {
                         function mapServicesToNames($services, $conexionBD)
                         {
                             $names = [];
@@ -427,6 +422,7 @@ if ($accion != '') {
                             }
                             return $names;
                         }
+
                         $old_service_names = mapServicesToNames($old_services, $conexionBD);
                         $new_service_names = mapServicesToNames($new_services, $conexionBD);
                         $old_services_str = implode(", ", $old_service_names);
