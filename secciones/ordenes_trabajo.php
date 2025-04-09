@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once('../configuraciones/bd.php');
 $conexionBD = BD::crearInstancia();
 
@@ -15,7 +16,7 @@ $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 if ($accion != '') {
     try {
         $conexionBD->beginTransaction();
-
+        $id_usuario_actual = $_SESSION['id_usuario'] ?? null;
         switch ($accion) {
             case 'agregar':
                 try {
@@ -575,10 +576,11 @@ if ($accion != '') {
                     // Registrar en historial_ot cada cambio acumulado
                     foreach ($campos_modificados as $cambio) {
                         $sql_historial = "INSERT INTO historial_ot (id_ot, id_responsable, campo_modificado, valor_anterior, valor_nuevo, fecha_modificacion) 
-                                              VALUES (:id_ot, :id_responsable, :campo_modificado, :valor_anterior, :valor_nuevo, NOW())";
+                                          VALUES (:id_ot, :id_responsable, :campo_modificado, :valor_anterior, :valor_nuevo, NOW())";
                         $consulta_historial = $conexionBD->prepare($sql_historial);
                         $consulta_historial->bindParam(':id_ot', $id_ot, PDO::PARAM_INT);
-                        $consulta_historial->bindParam(':id_responsable', $id_responsable, PDO::PARAM_INT);
+                        $consulta_historial->bindParam(':id_responsable', $id_usuario_actual, PDO::PARAM_INT);
+
                         $consulta_historial->bindParam(':campo_modificado', $cambio['campo'], PDO::PARAM_STR);
                         $consulta_historial->bindParam(':valor_anterior', $cambio['anterior'], PDO::PARAM_STR);
                         $consulta_historial->bindParam(':valor_nuevo', $cambio['nuevo'], PDO::PARAM_STR);
